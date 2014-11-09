@@ -2,6 +2,7 @@
 
 import os
 import sys
+import re
 import datetime
 import pprint
 import requests
@@ -92,6 +93,24 @@ def read(file_name):
 
     return content
 
+def get_files():
+    start_dir = os.path.join(get_cwd(), 'data')
+    find_files = [os.path.join(path, f)
+                  for path, dirs, files in os.walk(start_dir)
+                  for f in files if path.endswith('trans')]
+
+    return find_files
+
+def cleanup_csv(date_format):
+    files = get_files()
+    today = datetime.date.today()
+    for f in files:
+        match = re.match(r'^.*?_(\d{4}_\d{2}_\d{2})\.csv$', f)
+        if match:
+            f_date = datetime.datetime.strptime(match.group(1), date_format).date()
+            if 1 != f_date.day and f_date != today:
+                os.unlink(f)
+
 def main(account):
     date_format = '%d.%m.%Y'
     date_save_format = '%Y_%m_%d'
@@ -165,6 +184,8 @@ def main(account):
                  binary=True)
 
     sess.logout(content)
+
+    cleanup_csv(date_save_format)
 
 if '__main__' == __name__:
     if len(sys.argv) < 2 or not sys.argv[1]:
