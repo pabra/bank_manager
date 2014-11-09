@@ -32,7 +32,7 @@ class Session(object):
     def conf(self, param):
         return self.Config.get(self.account, param)
 
-    def get(self, location, post=False, post_data=None, track_last_url=True):
+    def get(self, location, post=False, post_data=None, track_last_url=True, binary=False):
         url = urljoin(self.last_url, location)
         kwargs = {}
         #kwargs['headers'] = {'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)'}
@@ -54,7 +54,10 @@ class Session(object):
         if track_last_url:
             self.last_url = r.request.url
 
-        return r.text.encode('utf8')
+        if not binary:
+            return r.text.encode('utf8')
+
+        return r.content
 
     def logout(self, content):
         try:
@@ -69,13 +72,14 @@ class Session(object):
 def get_cwd():
     return os.path.dirname(os.path.realpath(__file__))
 
-def save(file_name, content):
+def save(file_name, content, binary=False):
     cwd = get_cwd()
     subdir = os.path.join(cwd, os.path.dirname(file_name))
     if not os.path.isdir(subdir):
         os.makedirs(subdir)
     file_path = os.path.join(cwd, file_name)
-    f = open(file_path, 'w')
+    mode = 'w' if not binary else 'wb'
+    f = open(file_path, mode)
     f.write(content)
     f.close()
 
@@ -89,6 +93,9 @@ def read(file_name):
     return content
 
 def main(account):
+    date_format = '%d.%m.%Y'
+    date_save_format = '%Y_%m_%d'
+
     sess = Session(account)
     content = sess.get('https://banking.postbank.de')
     save('log/login.html', content)
@@ -122,7 +129,6 @@ def main(account):
                 sel['value'] = opt.get('value', '')
 
     today = datetime.date.today()
-    date_format = '%d.%m.%Y'
     trans_form.find('div', class_='fld-date-bis').find('input')['value'] = today.strftime(date_format)
     trans_form.find('div', class_='fld-date-von').find('input')['value'] = (today - datetime.timedelta(95)).strftime(date_format)
 
@@ -132,10 +138,31 @@ def main(account):
     content = sess.get(trans_form.get('action'), post=True, post_data=trans_data)
     soup = BeautifulSoup(content)
     csv_link = soup.find('a', class_='action-pdf').get('href')
-    csv_content = sess.get(csv_link)
+    csv_content = sess.get(csv_link, track_last_url=False)
     save('data/%s/trans/%s_%s.csv' % (today.year,
                                       account,
-                                      today.strftime('%Y_%m_%d')), csv_content)
+                                      today.strftime(date_save_format)), csv_content)
+
+    statements_overview = soup.find('a', class_='action-more').get('href')
+
+    content = sess.get(statements_overview)
+    save('log/statements_overview.html', content)
+    #content = read('log/statements_overview.html')
+    soup = BeautifulSoup(content)
+    pdf_links = []
+    for row in soup.find_all('tr', class_='state-unmarked'):
+        pdf_date = datetime.datetime.strptime(row.find('td', class_='headers-date').get_text(strip=True), date_format).date()
+        pdf_link = row.find('a', 'action-icon-download').get('href')
+        pdf_links.append((pdf_date, pdf_link))
+
+    if pdf_links:
+        for x in pdf_links:
+            pdf_content = sess.get(x[1], track_last_url=False, binary=True)
+            save('data/%s/pdf/%s_%s.pdf' % (x[0].year,
+                                            account,
+                                            x[0].strftime(date_save_format)),
+                 pdf_content,
+                 binary=True)
 
     sess.logout(content)
 
