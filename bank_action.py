@@ -111,7 +111,7 @@ def cleanup_csv(date_format):
             if 1 != f_date.day and f_date != today:
                 os.unlink(f)
 
-def main(account):
+def fetch(account):
     date_format = '%d.%m.%Y'
     date_save_format = '%Y_%m_%d'
 
@@ -187,9 +187,20 @@ def main(account):
 
     cleanup_csv(date_save_format)
 
-if '__main__' == __name__:
-    if len(sys.argv) < 2 or not sys.argv[1]:
-        print 'usage: %s account_name' % __file__
-        sys.exit()
+def usage():
+    print 'usage: %s fetch <account_name>' % __file__
+    print '       %s update' % __file__
+    sys.exit()
 
-    main(sys.argv[1])
+if '__main__' == __name__:
+    sys.argv.extend(['']*2)
+
+    if 'update' == sys.argv[1]:
+        print 'update'
+
+    elif 'fetch' == sys.argv[1] and sys.argv[2]:
+        fetch(sys.argv[2])
+
+    print 'usage: %s fetch <account_name>' % __file__
+    print '       %s update' % __file__
+    sys.exit()

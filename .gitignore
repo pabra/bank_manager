@@ -9,6 +9,6 @@
 #except this file
 !.gitignore
 
-fetch_transactions.ini
+bank_action.ini
 data
 log
