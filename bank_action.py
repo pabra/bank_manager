@@ -201,6 +201,6 @@ if '__main__' == __name__:
     elif 'fetch' == sys.argv[1] and sys.argv[2]:
         fetch(sys.argv[2])
 
-    print 'usage: %s fetch <account_name>' % __file__
-    print '       %s update' % __file__
-    sys.exit()
+    else:
+        print 'usage: %s fetch <account_name>' % __file__
+        print '       %s update' % __file__
