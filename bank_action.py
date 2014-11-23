@@ -56,7 +56,11 @@ class Session(object):
             self.last_url = r.request.url
 
         if not binary:
-            return r.text.encode('utf8')
+            cnt = r.text.encode('utf8')
+            if not cnt:
+                pprint.pprint(r.headers)
+                pprint.pprint(r.history)
+            return cnt
 
         return r.content
 
