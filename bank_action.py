@@ -162,6 +162,10 @@ def fetch(account):
     content = sess.get(trans_form.get('action'), post=True, post_data=trans_data)
     save('log/transcations-95.html', content)
     #content = read('log/transcations-95.html')
+    if not content:
+        print 'post transaction data again'
+        content = sess.get(trans_form.get('action'), post=True, post_data=trans_data)
+        save('log/transcations-95_2.html', content)
     soup = BeautifulSoup(content)
     csv_link = soup.find('a', class_='action-pdf').get('href')
     csv_content = sess.get(csv_link, track_last_url=False)
