@@ -154,7 +154,10 @@ def fetch(account):
     for el in trans_form.find_all(['input', 'select', 'button']):
         trans_data[el.get('name')] = el.get('value')
 
+    pprint.pprint( trans_data )
     content = sess.get(trans_form.get('action'), post=True, post_data=trans_data)
+    save('log/transcations-95.html', content)
+    #content = read('log/transcations-95.html')
     soup = BeautifulSoup(content)
     csv_link = soup.find('a', class_='action-pdf').get('href')
     csv_content = sess.get(csv_link, track_last_url=False)
