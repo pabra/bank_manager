@@ -1,14 +1,24 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import os
 import sys
 import re
+import csv
+import sqlite3
+import locale
+import time
 import datetime
+import hashlib
 import pprint
 import requests
 import ConfigParser
 from urlparse import urljoin
 from bs4 import BeautifulSoup
+
+DB_CONNECTION = False
+
+locale.setlocale(locale.LC_ALL, locale.getdefaultlocale())
 
 class Session(object):
     def __init__(self, account):
@@ -97,11 +107,14 @@ def read(file_name):
 
     return content
 
-def get_files():
+def get_files(account=None, min_date=None):
     start_dir = os.path.join(get_cwd(), 'data')
     find_files = [os.path.join(path, f)
                   for path, dirs, files in os.walk(start_dir)
-                  for f in files if path.endswith('trans')]
+                  for f in files
+                  if (path.endswith('trans')
+                      and (f.startswith(account) if account else True)
+                      and (datetime.datetime.strptime(re.match(r'^.*?_(\d{4}_\d{2}_\d{2})\.csv$', f).group(1), '%Y_%m_%d').date() >= min_date if min_date else True))]
 
     return find_files
 
@@ -114,6 +127,304 @@ def cleanup_csv(date_format):
             f_date = datetime.datetime.strptime(match.group(1), date_format).date()
             if 1 != f_date.day and f_date != today:
                 os.unlink(f)
+
+def db_connect():
+    global DB_CONNECTION
+
+    account = {'number': 396208853,
+               'name': 'nbg'}
+
+    if not DB_CONNECTION:
+        DB_CONNECTION = sqlite3.connect('data.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+        con = DB_CONNECTION
+        con.text_factory = str
+        cur = con.cursor()
+
+        cur.execute('SELECT * FROM sqlite_master')
+        sqlite_master = cur.fetchall()
+        tables = [x[1] for x in sqlite_master if x[0] == 'table']
+        indices = [x[1] for x in sqlite_master if x[0] == 'index']
+
+        if not 'accounts' in tables:
+            cur.execute('''
+                CREATE TABLE accounts (
+                    number INTERGER PRIMARY KEY NOT NULL,
+                    name TEXT,
+                    init_saldo INTERGER,
+                    last_update TIMESTAMP
+                )
+            ''')
+
+        if not 'transactions' in tables:
+            cur.execute('''
+                CREATE TABLE transactions (
+                    account INTERGER NOT NULL,
+                    hash TEXT,
+                    date DATE,
+                    valuta DATE,
+                    type TEXT,
+                    subject TEXT,
+                    transfer_from TEXT,
+                    transfer_to TEXT,
+                    value INTERGER,
+                    FOREIGN KEY (account) REFERENCES accounts (number)
+                )
+            ''')
+
+        q = '''
+            SELECT
+                number,
+                name,
+                init_saldo
+            FROM accounts
+            WHERE number = ?
+        '''
+        cur.execute(q, (account['number'],))
+        res = cur.fetchone()
+
+        if not res:
+            #init_saldo = None
+            #confirmed = 'n'
+            #while not (init_saldo != None and confirmed in ('', 'Y', 'y')):
+            #    confirmed = 'n'
+            #    inp = raw_input('initial saldo of account %r in euro: ' % account['name'])
+            #    match = re.match(r'(\d+)[.,]?(\d{0,2})', inp)
+            #    if match:
+            #        euro = int(match.group(1))
+            #        cent = match.group(2)
+            #        if '' != cent:
+            #            cent = int(cent)
+            #            if 10 > cent: cent *= 10
+            #        else:
+            #            cent = 0
+            #        init_saldo = (euro * 100) + cent
+            #        confirmed = raw_input('Those are %s cents, right? [Y/n] ' % init_saldo)
+
+            q = '''
+                INSERT INTO accounts
+                (number, name)
+                VALUES
+                (?, ?)
+            '''
+            cur.execute(q, (account['number'], account['name']))
+
+    else:
+        con = DB_CONNECTION
+        cur = con.cursor()
+
+
+    return con, cur
+
+def db_close(commit=True):
+    if DB_CONNECTION:
+        if commit:
+            try:
+                DB_CONNECTION.commit()
+            except sqlite3.ProgrammingError:
+                # connection was already closed
+                pass
+
+        DB_CONNECTION.close()
+
+def parse_amount(v):
+    return int(re.sub(r'[^0-9-]', '', v).replace(',','.'))
+
+def format_amount(v):
+    return locale.currency(v / 100.0, symbol=True, grouping=True)
+
+def parse_date(date_str):
+    return datetime.datetime.strptime(date_str, '%d.%m.%Y').date()
+
+def get_csv_from_file(file_name):
+    with open(file_name, 'r') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=';', quotechar='"')
+        csv_list = [row for i, row in enumerate(csv_reader) if i > 8]
+        csv_list.reverse()
+
+    return csv_list
+
+def get_parsed_csv_row(row):
+    # date, valDate, type, subj, from, to, value, saldo, sum
+    return (parse_date(row[0]),     # 0
+            parse_date(row[1]),     # 1
+            row[2],                 # 2
+            row[3],                 # 3
+            row[4],                 # 4
+            row[5],                 # 5
+            parse_amount(row[6]),   # 6
+            parse_amount(row[7]))   # 7
+
+def handle_init_transaction(account, first_row_values):
+    con, cur = db_connect()
+    print 'this is init input for account', account
+    print 'values', first_row_values
+    init_int = first_row_values[7] - first_row_values[6]
+    print 'init value', format_amount(init_int)
+    #sys.exit(0)
+    q = '''
+        UPDATE accounts
+        SET init_saldo = ?,
+            last_update = ?
+        WHERE number = ?
+    '''
+    cur.execute(q, (init_int, datetime.datetime.now(), account))
+    return init_int
+
+def get_transaction_hash(trans_val):
+    assert isinstance(trans_val, (tuple, list))
+    hash_list = []
+    for x in trans_val:
+        if isinstance(x, datetime.date):
+            hash_list.append(x.isoformat())
+        elif isinstance(x, (int, long)):
+            hash_list.append(str(x))
+        elif isinstance(x, basestring):
+            hash_list.append(x.lower().replace(' ', ''))
+        else:
+            assert False, 'unexpected transaction value type %' % type(x)
+
+    h = hashlib.sha1()
+    h.update('\n'.join(hash_list))
+    return h.hexdigest()
+
+def get_hashes(account_no, from_date, to_date):
+    con, cur = db_connect()
+    q = '''
+        SELECT hash
+        FROM transactions
+        WHERE account = ?
+          AND date >= ?
+          AND date <= ?
+    '''
+    cur.execute(q, (account_no, from_date, to_date))
+    return (x[0] for x in cur.fetchall())
+
+def db_import_file(file_name, account_no):
+    con, cur = db_connect()
+    current_saldo = get_saldo(account_no)
+    csv_list = get_csv_from_file(file_name)
+    print 'current_saldo', current_saldo
+    if current_saldo is None:
+        current_saldo = handle_init_transaction(account_no,
+                                                get_parsed_csv_row(csv_list[0]))
+    csv_from = get_parsed_csv_row(csv_list[:1][0])[0]
+    csv_to = get_parsed_csv_row(csv_list[-1:][0])[0]
+    hashes = get_hashes(account_no, csv_from, csv_to)
+    print 'hashes', hashes
+    print 'csv from', csv_from
+    print 'csv to  ', csv_to
+    last_date = get_last_entry_date(account_no)
+    print 'last_date', pprint.pformat(last_date)            # is datetime.date
+    if last_date and csv_from <= last_date and csv_to >= last_date:
+        drop_entries_for_date(account_no, last_date)
+
+    inserts = []
+    print file_name
+    for row in csv_list:
+        # date, valDate, type, subj, from, to, value, saldo
+        values = get_parsed_csv_row(row)
+        #if last_date and values[0] < last_date:
+        #    continue
+        trans_hash = get_transaction_hash(values[:7])
+
+        trans_values = (account_no, trans_hash) + values[:7]
+        #cur.execute('''
+        #    SELECT 1 FROM transactions
+        #    WHERE account = ?
+        #      AND date = ?
+        #      AND valuta = ?
+        #      AND type = ?
+        #      AND subject = ?
+        #      AND transfer_from = ?
+        #      AND transfer_to = ?
+        #      AND value = ?
+        #''', trans_values)
+        #res = cur.fetchone()
+        #if not res:
+        if not trans_hash in hashes:
+            print 'current_saldo += values[6]', current_saldo, '+=', values[6], '=', current_saldo + values[6]
+            current_saldo += values[6]
+            assert current_saldo == values[7], (str(current_saldo) + ' != ' + str(values[7]) + ' values: ' + str(trans_values))
+            #inserts.append((396208853, t_date, t_valuta_date, t_type, t_subj, t_from, t_to, t_amount))
+            #cur.execute('''
+            #    INSERT INTO transactions
+            #    (account, date, valuta, type, subject, transfer_from, transfer_to, value)
+            #    VALUES
+            #    (?,?,?,?,?,?,?,?)
+            #''', (account_no, t_date, t_valuta_date, t_type, t_subj, t_from, t_to, t_amount))
+            #inserts.append(('396208853', '1', '2', t_type, t_subj, t_from, t_to, str(t_amount)))
+            inserts.append(trans_values)
+
+    if inserts:
+        q = '''
+            INSERT INTO transactions
+            (account, hash, date, valuta, type, subject, transfer_from, transfer_to, value)
+            VALUES
+            %s
+        ''' % ','.join(('(?,?,?,?,?,?,?,?,?)',)*len(inserts))
+        print 'inserts', inserts
+        print q, '\n', [y for x in inserts for y in x]
+        cur.execute(q, [y for x in inserts for y in x])
+
+def get_saldo(account):
+    con, cur = db_connect()
+    q = '''
+        SELECT
+            a.init_saldo
+            +
+            IFNULL(SUM(t.value), 0)
+        FROM accounts a
+        LEFT JOIN transactions t ON t.account = a.number
+        WHERE a.number = ?
+    '''
+    cur.execute(q, (account,))
+    res = cur.fetchone()
+    if not res:
+        return None
+
+    return res[0]
+
+def get_last_entry_date(account):
+    con, cur = db_connect()
+    q = '''
+        SELECT MAX(date) AS "max [DATE]"
+        FROM transactions
+        WHERE account = ?
+    '''
+    cur.execute(q, (account,))
+    res = cur.fetchone()
+    if not res:
+        return None
+
+    return res[0]
+
+def drop_entries_for_date(account, last_date):
+    if last_date:
+        con, cur = db_connect()
+        q = '''
+            DELETE FROM transactions
+            WHERE account = ?
+              AND date = ?
+        '''
+        cur.execute(q, (account, last_date))
+
+def update_db(account):
+    sess = Session(account)
+    acc_no = sess.conf('user')
+    last_date = get_last_entry_date(acc_no)
+    print 'last_date', last_date
+    files = get_files(account=account, min_date=last_date)
+    files.sort()
+    pprint.pprint(files)
+    print
+    #print
+    #return
+    #files = ['/home/pepp/Private/git/bank_fetcher/data/2014/trans/nbg_2014_01_01_test.csv']
+    #files = ['/home/pepp/Private/git/bank_fetcher/data/2014/trans/nbg_2014_11_23.csv']
+    for f in files:
+        db_import_file(f, acc_no)
+
+    db_close()
 
 def fetch(account):
     date_format = '%d.%m.%Y'
@@ -199,18 +510,17 @@ def fetch(account):
 
 def usage():
     print 'usage: %s fetch <account_name>' % __file__
-    print '       %s update' % __file__
+    print '       %s update <account_name>' % __file__
     sys.exit()
 
 if '__main__' == __name__:
     sys.argv.extend(['']*2)
 
-    if 'update' == sys.argv[1]:
-        print 'update'
+    if 'update' == sys.argv[1] and sys.argv[2]:
+        update_db(sys.argv[2])
 
     elif 'fetch' == sys.argv[1] and sys.argv[2]:
         fetch(sys.argv[2])
 
     else:
-        print 'usage: %s fetch <account_name>' % __file__
-        print '       %s update' % __file__
+        usage()
