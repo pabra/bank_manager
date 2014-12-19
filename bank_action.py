@@ -271,14 +271,16 @@ def db_import_file(file_name, account_no):
                                                       'file: %s' % file_name])
         inserts.append(trans_values)
 
-    if inserts:
+    while inserts:
+        insters_slice = inserts[0:400]
+        inserts[0:400] = []
         q = '''
             INSERT INTO transactions
             (account, date, valuta, type, subject, transfer_from, transfer_to, value)
             VALUES
             %s
-        ''' % ','.join(('(?,?,?,?,?,?,?,?)',)*len(inserts))
-        cur.execute(q, [y for x in inserts for y in x])
+        ''' % ','.join(('(?,?,?,?,?,?,?,?)',)*len(insters_slice))
+        cur.execute(q, [y for x in insters_slice for y in x])
 
 def get_saldo(account):
     con, cur = db_connect()
