@@ -7,7 +7,6 @@ import re
 import csv
 import sqlite3
 import locale
-import time
 import datetime
 import hashlib
 import pprint
@@ -131,9 +130,6 @@ def cleanup_csv(date_format):
 def db_connect():
     global DB_CONNECTION
 
-    account = {'number': 396208853,
-               'name': 'nbg'}
-
     if not DB_CONNECTION:
         DB_CONNECTION = sqlite3.connect('data.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         con = DB_CONNECTION
@@ -171,47 +167,9 @@ def db_connect():
                 )
             ''')
 
-        q = '''
-            SELECT
-                number,
-                name,
-                init_saldo
-            FROM accounts
-            WHERE number = ?
-        '''
-        cur.execute(q, (account['number'],))
-        res = cur.fetchone()
-
-        if not res:
-            #init_saldo = None
-            #confirmed = 'n'
-            #while not (init_saldo != None and confirmed in ('', 'Y', 'y')):
-            #    confirmed = 'n'
-            #    inp = raw_input('initial saldo of account %r in euro: ' % account['name'])
-            #    match = re.match(r'(\d+)[.,]?(\d{0,2})', inp)
-            #    if match:
-            #        euro = int(match.group(1))
-            #        cent = match.group(2)
-            #        if '' != cent:
-            #            cent = int(cent)
-            #            if 10 > cent: cent *= 10
-            #        else:
-            #            cent = 0
-            #        init_saldo = (euro * 100) + cent
-            #        confirmed = raw_input('Those are %s cents, right? [Y/n] ' % init_saldo)
-
-            q = '''
-                INSERT INTO accounts
-                (number, name)
-                VALUES
-                (?, ?)
-            '''
-            cur.execute(q, (account['number'], account['name']))
-
     else:
         con = DB_CONNECTION
         cur = con.cursor()
-
 
     return con, cur
 
@@ -225,6 +183,25 @@ def db_close(commit=True):
                 pass
 
         DB_CONNECTION.close()
+
+def check_account_existence(acc_name, acc_no):
+    con, cur = db_connect()
+    q = '''
+        SELECT 1
+        FROM accounts
+        WHERE number = ?
+    '''
+    cur.execute(q, (acc_no,))
+    res = cur.fetchone()
+
+    if not res:
+        q = '''
+            INSERT INTO accounts
+            (number, name)
+            VALUES
+            (?, ?)
+        '''
+        cur.execute(q, (acc_no, acc_name))
 
 def parse_amount(v):
     return int(re.sub(r'[^0-9-]', '', v).replace(',','.'))
@@ -256,11 +233,7 @@ def get_parsed_csv_row(row):
 
 def handle_init_transaction(account, first_row_values):
     con, cur = db_connect()
-    print 'this is init input for account', account
-    print 'values', first_row_values
     init_int = first_row_values[7] - first_row_values[6]
-    print 'init value', format_amount(init_int)
-    #sys.exit(0)
     q = '''
         UPDATE accounts
         SET init_saldo = ?,
@@ -297,62 +270,39 @@ def get_hashes(account_no, from_date, to_date):
           AND date <= ?
     '''
     cur.execute(q, (account_no, from_date, to_date))
-    return (x[0] for x in cur.fetchall())
+    return [x[0] for x in cur.fetchall()]
 
 def db_import_file(file_name, account_no):
     con, cur = db_connect()
-    current_saldo = get_saldo(account_no)
     csv_list = get_csv_from_file(file_name)
-    print 'current_saldo', current_saldo
-    if current_saldo is None:
-        current_saldo = handle_init_transaction(account_no,
-                                                get_parsed_csv_row(csv_list[0]))
     csv_from = get_parsed_csv_row(csv_list[:1][0])[0]
     csv_to = get_parsed_csv_row(csv_list[-1:][0])[0]
-    hashes = get_hashes(account_no, csv_from, csv_to)
-    print 'hashes', hashes
-    print 'csv from', csv_from
-    print 'csv to  ', csv_to
     last_date = get_last_entry_date(account_no)
-    print 'last_date', pprint.pformat(last_date)            # is datetime.date
+
     if last_date and csv_from <= last_date and csv_to >= last_date:
         drop_entries_for_date(account_no, last_date)
 
+    current_saldo = get_saldo(account_no)
+
+    if current_saldo is None:
+        current_saldo = handle_init_transaction(account_no,
+                                                get_parsed_csv_row(csv_list[0]))
+    hashes = get_hashes(account_no, csv_from, csv_to)
     inserts = []
-    print file_name
     for row in csv_list:
         # date, valDate, type, subj, from, to, value, saldo
         values = get_parsed_csv_row(row)
-        #if last_date and values[0] < last_date:
-        #    continue
+        # do not touch old entries
+        if last_date and values[0] < last_date:
+            continue
         trans_hash = get_transaction_hash(values[:7])
-
         trans_values = (account_no, trans_hash) + values[:7]
-        #cur.execute('''
-        #    SELECT 1 FROM transactions
-        #    WHERE account = ?
-        #      AND date = ?
-        #      AND valuta = ?
-        #      AND type = ?
-        #      AND subject = ?
-        #      AND transfer_from = ?
-        #      AND transfer_to = ?
-        #      AND value = ?
-        #''', trans_values)
-        #res = cur.fetchone()
-        #if not res:
+
         if not trans_hash in hashes:
-            print 'current_saldo += values[6]', current_saldo, '+=', values[6], '=', current_saldo + values[6]
             current_saldo += values[6]
-            assert current_saldo == values[7], (str(current_saldo) + ' != ' + str(values[7]) + ' values: ' + str(trans_values))
-            #inserts.append((396208853, t_date, t_valuta_date, t_type, t_subj, t_from, t_to, t_amount))
-            #cur.execute('''
-            #    INSERT INTO transactions
-            #    (account, date, valuta, type, subject, transfer_from, transfer_to, value)
-            #    VALUES
-            #    (?,?,?,?,?,?,?,?)
-            #''', (account_no, t_date, t_valuta_date, t_type, t_subj, t_from, t_to, t_amount))
-            #inserts.append(('396208853', '1', '2', t_type, t_subj, t_from, t_to, str(t_amount)))
+            assert current_saldo == values[7], '\n'.join(['%s != %s' % (current_saldo, values[7]),
+                                                          'values: %s' % pprint.pformat(trans_values),
+                                                          'file: %s' % file_name])
             inserts.append(trans_values)
 
     if inserts:
@@ -362,8 +312,6 @@ def db_import_file(file_name, account_no):
             VALUES
             %s
         ''' % ','.join(('(?,?,?,?,?,?,?,?,?)',)*len(inserts))
-        print 'inserts', inserts
-        print q, '\n', [y for x in inserts for y in x]
         cur.execute(q, [y for x in inserts for y in x])
 
 def get_saldo(account):
@@ -411,16 +359,10 @@ def drop_entries_for_date(account, last_date):
 def update_db(account):
     sess = Session(account)
     acc_no = sess.conf('user')
+    check_account_existence(account, acc_no)
     last_date = get_last_entry_date(acc_no)
-    print 'last_date', last_date
     files = get_files(account=account, min_date=last_date)
     files.sort()
-    pprint.pprint(files)
-    print
-    #print
-    #return
-    #files = ['/home/pepp/Private/git/bank_fetcher/data/2014/trans/nbg_2014_01_01_test.csv']
-    #files = ['/home/pepp/Private/git/bank_fetcher/data/2014/trans/nbg_2014_11_23.csv']
     for f in files:
         db_import_file(f, acc_no)
 
