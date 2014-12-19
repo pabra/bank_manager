@@ -8,7 +8,6 @@ import csv
 import sqlite3
 import locale
 import datetime
-import hashlib
 import pprint
 import requests
 import ConfigParser
@@ -155,7 +154,6 @@ def db_connect():
             cur.execute('''
                 CREATE TABLE transactions (
                     account INTERGER NOT NULL,
-                    hash TEXT,
                     date DATE,
                     valuta DATE,
                     type TEXT,
@@ -243,35 +241,6 @@ def handle_init_transaction(account, first_row_values):
     cur.execute(q, (init_int, datetime.datetime.now(), account))
     return init_int
 
-def get_transaction_hash(trans_val):
-    assert isinstance(trans_val, (tuple, list))
-    hash_list = []
-    for x in trans_val:
-        if isinstance(x, datetime.date):
-            hash_list.append(x.isoformat())
-        elif isinstance(x, (int, long)):
-            hash_list.append(str(x))
-        elif isinstance(x, basestring):
-            hash_list.append(x.lower().replace(' ', ''))
-        else:
-            assert False, 'unexpected transaction value type %' % type(x)
-
-    h = hashlib.sha1()
-    h.update('\n'.join(hash_list))
-    return h.hexdigest()
-
-def get_hashes(account_no, from_date, to_date):
-    con, cur = db_connect()
-    q = '''
-        SELECT hash
-        FROM transactions
-        WHERE account = ?
-          AND date >= ?
-          AND date <= ?
-    '''
-    cur.execute(q, (account_no, from_date, to_date))
-    return [x[0] for x in cur.fetchall()]
-
 def db_import_file(file_name, account_no):
     con, cur = db_connect()
     csv_list = get_csv_from_file(file_name)
@@ -287,7 +256,6 @@ def db_import_file(file_name, account_no):
     if current_saldo is None:
         current_saldo = handle_init_transaction(account_no,
                                                 get_parsed_csv_row(csv_list[0]))
-    hashes = get_hashes(account_no, csv_from, csv_to)
     inserts = []
     for row in csv_list:
         # date, valDate, type, subj, from, to, value, saldo
@@ -295,23 +263,21 @@ def db_import_file(file_name, account_no):
         # do not touch old entries
         if last_date and values[0] < last_date:
             continue
-        trans_hash = get_transaction_hash(values[:7])
-        trans_values = (account_no, trans_hash) + values[:7]
+        trans_values = (account_no,) + values[:7]
 
-        if not trans_hash in hashes:
-            current_saldo += values[6]
-            assert current_saldo == values[7], '\n'.join(['%s != %s' % (current_saldo, values[7]),
-                                                          'values: %s' % pprint.pformat(trans_values),
-                                                          'file: %s' % file_name])
-            inserts.append(trans_values)
+        current_saldo += values[6]
+        assert current_saldo == values[7], '\n'.join(['%s != %s' % (current_saldo, values[7]),
+                                                      'values: %s' % pprint.pformat(trans_values),
+                                                      'file: %s' % file_name])
+        inserts.append(trans_values)
 
     if inserts:
         q = '''
             INSERT INTO transactions
-            (account, hash, date, valuta, type, subject, transfer_from, transfer_to, value)
+            (account, date, valuta, type, subject, transfer_from, transfer_to, value)
             VALUES
             %s
-        ''' % ','.join(('(?,?,?,?,?,?,?,?,?)',)*len(inserts))
+        ''' % ','.join(('(?,?,?,?,?,?,?,?)',)*len(inserts))
         cur.execute(q, [y for x in inserts for y in x])
 
 def get_saldo(account):
