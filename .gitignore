@@ -9,6 +9,7 @@
 #except this file
 !.gitignore
 
+bank.sqlite3
 bank_action.ini
 data
 log

@@ -130,7 +130,7 @@ def db_connect():
     global DB_CONNECTION
 
     if not DB_CONNECTION:
-        DB_CONNECTION = sqlite3.connect('data.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+        DB_CONNECTION = sqlite3.connect('bank.sqlite3', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         con = DB_CONNECTION
         con.text_factory = str
         cur = con.cursor()
