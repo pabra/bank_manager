@@ -274,7 +274,7 @@ def db_import_file(file_name, account_no):
     update_timestamp = bool(inserts)
     while inserts:
         insters_slice = inserts[0:400]
-        inserts[0:400] = []
+        del inserts[0:400]
         q = '''
             INSERT INTO transactions
             (account, date, valuta, type, subject, transfer_from, transfer_to, value)
