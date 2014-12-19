@@ -219,15 +219,14 @@ def get_csv_from_file(file_name):
     return csv_list
 
 def get_parsed_csv_row(row):
-    # date, valDate, type, subj, from, to, value, saldo, sum
-    return (parse_date(row[0]),     # 0
-            parse_date(row[1]),     # 1
-            row[2],                 # 2
-            row[3],                 # 3
-            row[4],                 # 4
-            row[5],                 # 5
-            parse_amount(row[6]),   # 6
-            parse_amount(row[7]))   # 7
+    return (parse_date(row[0]),     # 0 - date
+            parse_date(row[1]),     # 1 - valDate
+            row[2].strip(),         # 2 - type
+            row[3].strip(),         # 3 - subj
+            row[4].strip(),         # 4 - from
+            row[5].strip(),         # 5 - to
+            parse_amount(row[6]),   # 6 - value
+            parse_amount(row[7]))   # 7 - sum
 
 def handle_init_transaction(account, first_row_values):
     con, cur = db_connect()
