@@ -113,7 +113,7 @@ def cleanup_csv(date_format):
         match = re.match(r'^.*?_(\d{4}_\d{2}_\d{2})\.csv$', f)
         if match:
             f_date = datetime.datetime.strptime(match.group(1), date_format).date()
-            if 1 != f_date.day and f_date != today:
+            if not f_date.day in (1, 10, 20, 30) and f_date != today:
                 os.unlink(f)
 
 def fetch(account):
