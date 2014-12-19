@@ -165,6 +165,14 @@ def db_connect():
                 )
             ''')
 
+        if not 'debit_warn' in tables:
+            cur.execute('''
+                CREATE TABLE debit_warn (
+                    name TEXT PRIMARY KEY NOT NULL,
+                    date DATE NOT NULL
+                )
+            ''')
+
     else:
         con = DB_CONNECTION
         cur = con.cursor()
@@ -240,6 +248,32 @@ def handle_init_transaction(account, first_row_values):
     cur.execute(q, (init_int, datetime.datetime.now(), account))
     return init_int
 
+def check_lastschrift():
+    con, cur = db_connect()
+    q = '''
+        SELECT t.account, t.date, t.type, t.subject, t.value, t.transfer_to
+        FROM transactions t
+        LEFT JOIN transactions t2 ON t2.transfer_to = t.transfer_to AND t2.date < t.date
+        LEFT JOIN debit_warn d ON d.name = t.transfer_to
+        WHERE (t.type = "Lastschrift"
+               OR (t.type = "Kartenverfügung"
+                   AND t.transfer_to <> ""))
+              AND d.name IS NULL
+              AND t2.account IS NULL
+        GROUP BY t.transfer_to
+    '''
+    cur.execute(q)
+    res = cur.fetchall()
+    for x in res:
+        print 'On %s %r pulled %s from your account %s by %r with subject %r.' % (x[1].strftime('%a, %d %b %Y'), x[5], format_amount(x[4]), x[0], x[2], x[3])
+        q = '''
+            INSERT INTO debit_warn
+            (name, date)
+            VALUES
+            (?, ?)
+        '''
+        cur.execute(q, (x[5], x[1]))
+
 def db_import_file(file_name, account_no):
     con, cur = db_connect()
     csv_list = get_csv_from_file(file_name)
@@ -289,6 +323,7 @@ def db_import_file(file_name, account_no):
             WHERE number = ?
         '''
         cur.execute(q, (datetime.datetime.now(), account_no))
+        check_lastschrift()
 
 def get_saldo(account):
     con, cur = db_connect()
