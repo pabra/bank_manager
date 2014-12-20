@@ -1,15 +1,23 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import os
 import sys
 import re
 import time
+import csv
+import sqlite3
+import locale
 import datetime
 import pprint
 import requests
 import ConfigParser
 from urlparse import urljoin
 from bs4 import BeautifulSoup
+
+DB_CONNECTION = False
+
+locale.setlocale(locale.LC_ALL, locale.getdefaultlocale())
 
 class Session(object):
     def __init__(self, account):
@@ -98,11 +106,14 @@ def read(file_name):
 
     return content
 
-def get_files():
+def get_files(account=None, min_date=None):
     start_dir = os.path.join(get_cwd(), 'data')
     find_files = [os.path.join(path, f)
                   for path, dirs, files in os.walk(start_dir)
-                  for f in files if path.endswith('trans')]
+                  for f in files
+                  if (path.endswith('trans')
+                      and (f.startswith(account) if account else True)
+                      and (datetime.datetime.strptime(re.match(r'^.*?_(\d{4}_\d{2}_\d{2})\.csv$', f).group(1), '%Y_%m_%d').date() >= min_date if min_date else True))]
 
     return find_files
 
@@ -115,6 +126,284 @@ def cleanup_csv(date_format):
             f_date = datetime.datetime.strptime(match.group(1), date_format).date()
             if not f_date.day in (1, 10, 20, 30) and f_date != today:
                 os.unlink(f)
+
+def db_connect():
+    global DB_CONNECTION
+
+    if not DB_CONNECTION:
+        curr_dir = os.path.dirname(os.path.realpath(__file__))
+        DB_CONNECTION = sqlite3.connect(os.path.join(curr_dir, 'bank.sqlite3'), detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+        con = DB_CONNECTION
+        con.text_factory = str
+        cur = con.cursor()
+
+        cur.execute('SELECT * FROM sqlite_master')
+        sqlite_master = cur.fetchall()
+        tables = [x[1] for x in sqlite_master if x[0] == 'table']
+        indices = [x[1] for x in sqlite_master if x[0] == 'index']
+
+        if not 'accounts' in tables:
+            cur.execute('''
+                CREATE TABLE accounts (
+                    number INTERGER PRIMARY KEY NOT NULL,
+                    name TEXT,
+                    init_saldo INTERGER,
+                    last_update TIMESTAMP
+                )
+            ''')
+
+        if not 'transactions' in tables:
+            cur.execute('''
+                CREATE TABLE transactions (
+                    account INTERGER NOT NULL,
+                    date DATE,
+                    valuta DATE,
+                    type TEXT,
+                    subject TEXT,
+                    transfer_from TEXT,
+                    transfer_to TEXT,
+                    value INTERGER,
+                    FOREIGN KEY (account) REFERENCES accounts (number)
+                )
+            ''')
+
+        if not 'debit_warn' in tables:
+            cur.execute('''
+                CREATE TABLE debit_warn (
+                    name TEXT PRIMARY KEY NOT NULL,
+                    date DATE NOT NULL
+                )
+            ''')
+
+    else:
+        con = DB_CONNECTION
+        cur = con.cursor()
+
+    return con, cur
+
+def db_close(commit=True):
+    if DB_CONNECTION:
+        if commit:
+            try:
+                DB_CONNECTION.commit()
+            except sqlite3.ProgrammingError:
+                # connection was already closed
+                pass
+
+        DB_CONNECTION.close()
+
+def check_account_existence(acc_name, acc_no):
+    con, cur = db_connect()
+    q = '''
+        SELECT 1
+        FROM accounts
+        WHERE number = ?
+    '''
+    cur.execute(q, (acc_no,))
+    res = cur.fetchone()
+
+    if not res:
+        q = '''
+            INSERT INTO accounts
+            (number, name)
+            VALUES
+            (?, ?)
+        '''
+        cur.execute(q, (acc_no, acc_name))
+
+def parse_amount(v):
+    return int(re.sub(r'[^0-9-]', '', v).replace(',','.'))
+
+def format_amount(v):
+    return locale.currency(v / 100.0, symbol=True, grouping=True)
+
+def parse_date(date_str):
+    return datetime.datetime.strptime(date_str, '%d.%m.%Y').date()
+
+def get_csv_from_file(file_name):
+    with open(file_name, 'r') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=';', quotechar='"')
+        csv_list = [row for i, row in enumerate(csv_reader) if i > 8]
+        csv_list.reverse()
+
+    return csv_list
+
+def get_parsed_csv_row(row):
+    return (parse_date(row[0]),     # 0 - date
+            parse_date(row[1]),     # 1 - valDate
+            row[2].strip(),         # 2 - type
+            row[3].strip(),         # 3 - subj
+            row[4].strip(),         # 4 - from
+            row[5].strip(),         # 5 - to
+            parse_amount(row[6]),   # 6 - value
+            parse_amount(row[7]))   # 7 - sum
+
+def handle_init_transaction(account, first_row_values):
+    con, cur = db_connect()
+    init_int = first_row_values[7] - first_row_values[6]
+    q = '''
+        UPDATE accounts
+        SET init_saldo = ?,
+            last_update = ?
+        WHERE number = ?
+    '''
+    cur.execute(q, (init_int, datetime.datetime.now(), account))
+    return init_int
+
+def check_lastschrift():
+    con, cur = db_connect()
+    today = datetime.date.today()
+    year_ago = today - datetime.timedelta(365)
+    # first clean up
+    q = '''
+        DELETE FROM debit_warn
+        WHERE date < ?
+    '''
+    cur.execute(q, (year_ago,))
+
+    # then update
+    q = '''
+        UPDATE debit_warn
+        SET date = (SELECT _.date
+                    FROM transactions _
+                    WHERE _.transfer_to = name
+                    ORDER BY _.date DESC
+                    LIMIT 1)
+    '''
+
+    # finally fetch, report and add new ones
+    q = '''
+        SELECT account, date, type, subject, value, transfer_to
+        FROM transactions
+        WHERE date >= ?
+              AND (LOWER(type) = "lastschrift"
+                   OR (LOWER(type) = "kartenverfügung"
+                       AND transfer_to <> ""))
+              AND transfer_to NOT IN (SELECT _.name
+                                      FROM debit_warn _)
+        GROUP BY transfer_to
+        ORDER BY date DESC
+    '''
+    cur.execute(q, (year_ago,))
+    res = cur.fetchall()
+    for x in res:
+        if x[1] >= year_ago:
+            print '\n'.join(['On %s',
+                             '%r balanced of your account %s',
+                             'by %s using %r',
+                             'with subject %r.']) % (x[1].strftime('%a, %d %b %Y'), x[5], x[0], format_amount(x[4]), x[2], x[3])
+            q = '''
+                INSERT INTO debit_warn
+                (name, date)
+                VALUES
+                (?, ?)
+            '''
+            cur.execute(q, (x[5], x[1]))
+
+def db_import_file(file_name, account_no):
+    con, cur = db_connect()
+    csv_list = get_csv_from_file(file_name)
+    csv_from = get_parsed_csv_row(csv_list[:1][0])[0]
+    csv_to = get_parsed_csv_row(csv_list[-1:][0])[0]
+    last_date = get_last_entry_date(account_no)
+
+    if last_date and csv_from <= last_date and csv_to >= last_date:
+        drop_entries_for_date(account_no, last_date)
+
+    current_saldo = get_saldo(account_no)
+
+    if current_saldo is None:
+        current_saldo = handle_init_transaction(account_no,
+                                                get_parsed_csv_row(csv_list[0]))
+    inserts = []
+    for row in csv_list:
+        # date, valDate, type, subj, from, to, value, saldo
+        values = get_parsed_csv_row(row)
+        # do not touch old entries
+        if last_date and values[0] < last_date:
+            continue
+        trans_values = (account_no,) + values[:7]
+
+        current_saldo += values[6]
+        assert current_saldo == values[7], '\n'.join(['%s != %s' % (current_saldo, values[7]),
+                                                      'values: %s' % pprint.pformat(trans_values),
+                                                      'file: %s' % file_name])
+        inserts.append(trans_values)
+
+    update_timestamp = bool(inserts)
+    while inserts:
+        insters_slice = inserts[0:400]
+        del inserts[0:400]
+        q = '''
+            INSERT INTO transactions
+            (account, date, valuta, type, subject, transfer_from, transfer_to, value)
+            VALUES
+            %s
+        ''' % ','.join(('(?,?,?,?,?,?,?,?)',)*len(insters_slice))
+        cur.execute(q, [y for x in insters_slice for y in x])
+
+    if update_timestamp:
+        q = '''
+            UPDATE accounts
+            SET last_update = ?
+            WHERE number = ?
+        '''
+        cur.execute(q, (datetime.datetime.now(), account_no))
+        check_lastschrift()
+
+def get_saldo(account):
+    con, cur = db_connect()
+    q = '''
+        SELECT
+            a.init_saldo
+            +
+            IFNULL(SUM(t.value), 0)
+        FROM accounts a
+        LEFT JOIN transactions t ON t.account = a.number
+        WHERE a.number = ?
+    '''
+    cur.execute(q, (account,))
+    res = cur.fetchone()
+    if not res:
+        return None
+
+    return res[0]
+
+def get_last_entry_date(account):
+    con, cur = db_connect()
+    q = '''
+        SELECT MAX(date) AS "max [DATE]"
+        FROM transactions
+        WHERE account = ?
+    '''
+    cur.execute(q, (account,))
+    res = cur.fetchone()
+    if not res:
+        return None
+
+    return res[0]
+
+def drop_entries_for_date(account, last_date):
+    if last_date:
+        con, cur = db_connect()
+        q = '''
+            DELETE FROM transactions
+            WHERE account = ?
+              AND date = ?
+        '''
+        cur.execute(q, (account, last_date))
+
+def update_db(account):
+    sess = Session(account)
+    acc_no = sess.conf('user')
+    check_account_existence(account, acc_no)
+    last_date = get_last_entry_date(acc_no)
+    files = get_files(account=account, min_date=last_date)
+    files.sort()
+    for f in files:
+        db_import_file(f, acc_no)
+
+    db_close()
 
 def fetch(account):
     date_format = '%d.%m.%Y'
@@ -202,18 +491,17 @@ def fetch(account):
 
 def usage():
     print 'usage: %s fetch <account_name>' % __file__
-    print '       %s update' % __file__
+    print '       %s update <account_name>' % __file__
     sys.exit()
 
 if '__main__' == __name__:
     sys.argv.extend(['']*2)
 
-    if 'update' == sys.argv[1]:
-        print 'update'
+    if 'update' == sys.argv[1] and sys.argv[2]:
+        update_db(sys.argv[2])
 
     elif 'fetch' == sys.argv[1] and sys.argv[2]:
         fetch(sys.argv[2])
 
     else:
-        print 'usage: %s fetch <account_name>' % __file__
-        print '       %s update' % __file__
+        usage()
