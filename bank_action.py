@@ -251,29 +251,53 @@ def handle_init_transaction(account, first_row_values):
 
 def check_lastschrift():
     con, cur = db_connect()
+    today = datetime.date.today()
+    year_ago = today - datetime.timedelta(365)
+    # first clean up
     q = '''
-        SELECT t.account, t.date, t.type, t.subject, t.value, t.transfer_to
-        FROM transactions t
-        LEFT JOIN transactions t2 ON t2.transfer_to = t.transfer_to AND t2.date < t.date
-        LEFT JOIN debit_warn d ON d.name = t.transfer_to
-        WHERE (t.type = "Lastschrift"
-               OR (t.type = "Kartenverfügung"
-                   AND t.transfer_to <> ""))
-              AND d.name IS NULL
-              AND t2.account IS NULL
-        GROUP BY t.transfer_to
+        DELETE FROM debit_warn
+        WHERE date < ?
     '''
-    cur.execute(q)
+    cur.execute(q, (year_ago,))
+
+    # then update
+    q = '''
+        UPDATE debit_warn
+        SET date = (SELECT _.date
+                    FROM transactions _
+                    WHERE _.transfer_to = name
+                    ORDER BY _.date DESC
+                    LIMIT 1)
+    '''
+
+    # finally fetch, report and add new ones
+    q = '''
+        SELECT account, date, type, subject, value, transfer_to
+        FROM transactions
+        WHERE date >= ?
+              AND (LOWER(type) = "lastschrift"
+                   OR (LOWER(type) = "kartenverfügung"
+                       AND transfer_to <> ""))
+              AND transfer_to NOT IN (SELECT _.name
+                                      FROM debit_warn _)
+        GROUP BY transfer_to
+        ORDER BY date DESC
+    '''
+    cur.execute(q, (year_ago,))
     res = cur.fetchall()
     for x in res:
-        print 'On %s %r pulled %s from your account %s by %r with subject %r.' % (x[1].strftime('%a, %d %b %Y'), x[5], format_amount(x[4]), x[0], x[2], x[3])
-        q = '''
-            INSERT INTO debit_warn
-            (name, date)
-            VALUES
-            (?, ?)
-        '''
-        cur.execute(q, (x[5], x[1]))
+        if x[1] >= year_ago:
+            print '\n'.join(['On %s',
+                             '%r balanced of your account %s',
+                             'by %s using %r',
+                             'with subject %r.']) % (x[1].strftime('%a, %d %b %Y'), x[5], x[0], format_amount(x[4]), x[2], x[3])
+            q = '''
+                INSERT INTO debit_warn
+                (name, date)
+                VALUES
+                (?, ?)
+            '''
+            cur.execute(q, (x[5], x[1]))
 
 def db_import_file(file_name, account_no):
     con, cur = db_connect()
