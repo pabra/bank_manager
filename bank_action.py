@@ -270,6 +270,7 @@ def check_lastschrift():
                     ORDER BY _.date DESC
                     LIMIT 1)
     '''
+    cur.execute(q)
 
     # finally fetch, report and add new ones
     q = '''
