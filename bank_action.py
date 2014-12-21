@@ -12,6 +12,8 @@ import datetime
 import pprint
 import requests
 import ConfigParser
+import smtplib
+from email.mime.text import MIMEText
 from urlparse import urljoin
 from bs4 import BeautifulSoup
 
@@ -250,6 +252,21 @@ def handle_init_transaction(account, first_row_values):
     cur.execute(q, (init_int, datetime.datetime.now(), account))
     return init_int
 
+def send_message(msg=[], subject='Debit Warning', mail_from='patrick.braune@gmail.com', rcpt_to='patrick.braune@gmail.com', host='localhost'):
+    if not msg:
+        return
+
+    text_to_send = '\n\n'.join(msg)
+    try:
+        smtp_msg = MIMEText(text_to_send)
+        smtp_msg['Subject'] = subject
+        smtp_msg['From'] = mail_from
+        smtp_msg['To'] = rcpt_to
+        s = smtplib.SMTP(host)
+        s.sendmail(mail_from, [rcpt_to], smtp_msg.as_string())
+    except:
+        print text_to_send
+
 def check_lastschrift():
     con, cur = db_connect()
     today = datetime.date.today()
@@ -287,12 +304,18 @@ def check_lastschrift():
     '''
     cur.execute(q, (year_ago,))
     res = cur.fetchall()
+    msg = []
     for x in res:
         if x[1] >= year_ago:
-            print '\n'.join(['On %s',
-                             '%r balanced of your account %s',
-                             'by %s using %r',
-                             'with subject %r.']) % (x[1].strftime('%a, %d %b %Y'), x[5], x[0], format_amount(x[4]), x[2], x[3])
+            msg.append('\n'.join(['On %s',
+                                  '%r balanced of your account %s',
+                                  'by %s using %r',
+                                  'with subject %r.']) % (x[1].strftime('%a, %d %b %Y'),
+                                                          x[5],
+                                                          x[0],
+                                                          format_amount(x[4]),
+                                                          x[2],
+                                                          x[3]))
             q = '''
                 INSERT INTO debit_warn
                 (name, date)
@@ -300,6 +323,9 @@ def check_lastschrift():
                 (?, ?)
             '''
             cur.execute(q, (x[5], x[1]))
+
+    if msg:
+        send_message(msg)
 
 def db_import_file(file_name, account_no):
     con, cur = db_connect()
