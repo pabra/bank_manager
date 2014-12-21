@@ -259,6 +259,7 @@ def send_message(msg=[], subject='Debit Warning', mail_from='patrick.braune@gmai
     text_to_send = '\n\n'.join(msg)
     try:
         smtp_msg = MIMEText(text_to_send)
+        smtp_msg.set_charset('utf-8')
         smtp_msg['Subject'] = subject
         smtp_msg['From'] = mail_from
         smtp_msg['To'] = rcpt_to
