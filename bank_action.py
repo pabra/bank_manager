@@ -173,7 +173,7 @@ def db_connect():
             cur.execute('''
                 CREATE TABLE debit_warn (
                     name TEXT PRIMARY KEY NOT NULL,
-                    date DATE NOT NULL
+                    last_happend DATE NOT NULL
                 )
             ''')
 
@@ -275,18 +275,18 @@ def check_lastschrift():
     # first clean up
     q = '''
         DELETE FROM debit_warn
-        WHERE date < ?
+        WHERE last_happend < ?
     '''
     cur.execute(q, (year_ago,))
 
     # then update
     q = '''
         UPDATE debit_warn
-        SET date = (SELECT _.date
-                    FROM transactions _
-                    WHERE _.transfer_to = name
-                    ORDER BY _.date DESC
-                    LIMIT 1)
+        SET last_happend = (SELECT _.date
+                            FROM transactions _
+                            WHERE _.transfer_to = name
+                            ORDER BY _.date DESC
+                            LIMIT 1)
     '''
     cur.execute(q)
 
@@ -319,7 +319,7 @@ def check_lastschrift():
                                                             x[3]))
             q = '''
                 INSERT INTO debit_warn
-                (name, date)
+                (name, last_happend)
                 VALUES
                 (?, ?)
             '''
