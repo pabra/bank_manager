@@ -309,14 +309,14 @@ def check_lastschrift():
     for x in res:
         if x[1] >= year_ago:
             msg.append('\n'.join(['On %s',
-                                  '%r balanced of your account %s',
-                                  'by %s using %r',
-                                  'with subject %r.']) % (x[1].strftime('%a, %d %b %Y'),
-                                                          x[5],
-                                                          x[0],
-                                                          format_amount(x[4]),
-                                                          x[2],
-                                                          x[3]))
+                                  '"%s" adjusted your account %s',
+                                  'by %s using "%s"',
+                                  'with subject "%s".']) % (x[1].strftime('%a, %d %b %Y'),
+                                                            x[5],
+                                                            x[0],
+                                                            format_amount(x[4]),
+                                                            x[2],
+                                                            x[3]))
             q = '''
                 INSERT INTO debit_warn
                 (name, date)
