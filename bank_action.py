@@ -257,6 +257,7 @@ def send_message(msg=[], subject='Debit Warning', mail_from='patrick.braune@gmai
         return
 
     text_to_send = '\n\n'.join(msg)
+    text_to_send = text_to_send.decode('utf-8')
     try:
         smtp_msg = MIMEText(text_to_send)
         smtp_msg.set_charset('utf-8')
