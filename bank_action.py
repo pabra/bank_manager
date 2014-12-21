@@ -330,7 +330,7 @@ def db_import_file(file_name, account_no):
                                                       'file: %s' % file_name])
         inserts.append(trans_values)
 
-    update_timestamp = bool(inserts)
+    inserted = bool(inserts)
     while inserts:
         insters_slice = inserts[0:400]
         del inserts[0:400]
@@ -342,7 +342,7 @@ def db_import_file(file_name, account_no):
         ''' % ','.join(('(?,?,?,?,?,?,?,?)',)*len(insters_slice))
         cur.execute(q, [y for x in insters_slice for y in x])
 
-    if update_timestamp:
+    if inserted:
         q = '''
             UPDATE accounts
             SET last_update = ?
