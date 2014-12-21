@@ -173,7 +173,8 @@ def db_connect():
             cur.execute('''
                 CREATE TABLE debit_warn (
                     name TEXT PRIMARY KEY NOT NULL,
-                    last_happend DATE NOT NULL
+                    last_happend DATE NOT NULL,
+                    reported DATE NOT NULL
                 )
             ''')
 
@@ -319,11 +320,11 @@ def check_lastschrift():
                                                             x[3]))
             q = '''
                 INSERT INTO debit_warn
-                (name, last_happend)
+                (name, last_happend, reported)
                 VALUES
-                (?, ?)
+                (?, ?, ?)
             '''
-            cur.execute(q, (x[5], x[1]))
+            cur.execute(q, (x[5], x[1], today))
 
     if msg:
         send_message(msg)
