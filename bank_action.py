@@ -52,6 +52,9 @@ class Session(object):
         if self.cookies:
             kwargs['cookies'] = self.cookies
 
+        # always sleep 5 sec
+        time.sleep(5)
+
         if post:
             r = requests.post(url, data=post_data, **kwargs)
         else:
@@ -477,7 +480,6 @@ def fetch(account):
     for el in trans_form.find_all(['input', 'select', 'button']):
         trans_data[el.get('name')] = el.get('value')
 
-    time.sleep(3)
     content = sess.get(trans_form.get('action'), post=True, post_data=trans_data)
     save('log/transcations-95.html', content)
     #content = read('log/transcations-95.html')
