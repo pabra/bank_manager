@@ -11,7 +11,7 @@ def handle_account_selection():
     accounts = get_accounts()
     account = bottle.request.GET.get('account')
     if not account in map(str, (x['number'] for x in accounts)):
-        account = accounts[0]['number']
+        account = str(accounts[0]['number'])
 
     return account, accounts
 
