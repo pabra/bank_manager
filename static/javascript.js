@@ -88,8 +88,10 @@ BankDebit = function BankDebitFn() {
 };
 
 $(function(){
-    var bankDebit;
-    if ('/debit' === location.pathname) {
+    var locPath = location.pathname.split('/'),
+        locDoc = locPath[locPath.length -1],
+        bankDebit;
+    if ('debit' === locDoc) {
         bankDebit = new BankDebit();
         debug_ooo = bankDebit;
     }
