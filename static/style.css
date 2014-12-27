@@ -28,7 +28,7 @@ th.desc:after {
     content: " \025BE";
 }
 
-#header_accounts a.selected {
+#header_accounts a.active {
     font-weight: bold;
 }
 
