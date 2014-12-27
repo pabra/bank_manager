@@ -132,6 +132,10 @@ def cleanup_csv(date_format):
             if not f_date.day in (1, 10, 20, 30) and f_date != today:
                 os.unlink(f)
 
+def fetchall_dicts(cur):
+    columns = [x[0] for x in cur.description]
+    return [dict(zip(columns, x)) for x in cur.fetchall()]
+
 def db_connect():
     global DB_CONNECTION
 
