@@ -192,6 +192,8 @@ def db_connect():
     return con, cur
 
 def db_close(commit=True):
+    global DB_CONNECTION
+
     if DB_CONNECTION:
         if commit:
             try:
@@ -201,6 +203,7 @@ def db_close(commit=True):
                 pass
 
         DB_CONNECTION.close()
+        DB_CONNECTION = False
 
 def check_account_existence(acc_name, acc_no):
     con, cur = db_connect()
