@@ -90,6 +90,12 @@ BankDebit = function BankDebitFn() {
 
 $(function(){
     var bankDebit;
+    $('#header_links a').each(function(){
+        var el = $(this);
+        if (el.attr('href').split('?')[0] === routeName) {
+            el.addClass('active');
+        }
+    });
     if ('debit' === routeName) {
         bankDebit = new BankDebit();
         debug_ooo = bankDebit;
