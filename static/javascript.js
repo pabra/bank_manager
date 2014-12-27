@@ -74,7 +74,7 @@ BankDebit = function BankDebitFn() {
     init = function initFn() {
         model = new Model();
         ko.applyBindings(model);
-        $.getJSON('/api/debit/'+account, function(data) {
+        $.getJSON('api/debit/'+account, function(data) {
             var list = data.data;
             ko.utils.arrayForEach(list, function(x){
                 x.reported_loc = dateToStr(strToDate(x.reported), '%d.%m.%Y');
