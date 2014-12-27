@@ -111,7 +111,6 @@ def api(action, account):
     return {'a': ['1',2,datetime.date.today().isoformat(), action]}
 
 if '__main__' == __name__:
-    #bottle.debug(True)
     bottle.run(app=app,
                host='127.0.0.1',
                port=3001,
