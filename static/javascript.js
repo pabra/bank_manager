@@ -81,6 +81,7 @@ BankDebit = function BankDebitFn() {
                 x.last_happend_loc = dateToStr(strToDate(x.last_happend), '%d.%m.%Y');
             });
             model.debitList(list);
+            model.sortList('name', 'asc');
         });
     };
 
