@@ -1,4 +1,4 @@
-/*global ko, account */
+/*global ko, account, routeName */
 'use strict';
 var strToDate, dateToStr, BankDebit, debug_ooo;
 
@@ -89,10 +89,8 @@ BankDebit = function BankDebitFn() {
 };
 
 $(function(){
-    var locPath = location.pathname.split('/'),
-        locDoc = locPath[locPath.length -1],
-        bankDebit;
-    if ('debit' === locDoc) {
+    var bankDebit;
+    if ('debit' === routeName) {
         bankDebit = new BankDebit();
         debug_ooo = bankDebit;
     }

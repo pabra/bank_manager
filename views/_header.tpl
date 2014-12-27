@@ -7,7 +7,8 @@
 <script type="text/javascript" src="static/javascript.js"></script>
 <script type="text/javascript">
 //<![CDATA[
-var account = "{{account}}";
+var account = "{{account}}",
+    routeName = location.pathname.substr(location.pathname.lastIndexOf('/') +1);
 //]]>
 </script>
 </head>
