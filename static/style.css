@@ -2,3 +2,42 @@ body {
     background: #eee;
     padding: 100px;
 }
+
+a {
+    text-decoration: none;
+    color: rgb(22, 89, 185);
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+tr.even {
+    background-color: #fff;
+}
+
+tr.odd {
+    background-color: #ddd;
+}
+
+th.asc:after {
+    content: " \025B4";
+}
+
+th.desc:after {
+    content: " \025BE";
+}
+
+#header_accounts a.selected {
+    font-weight: bold;
+}
+
+.clickable {
+    cursor: pointer;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -o-user-select: none;
+}
