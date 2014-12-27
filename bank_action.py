@@ -383,6 +383,16 @@ def db_import_file(file_name, account_no):
         cur.execute(q, (datetime.datetime.now(), account_no))
         check_lastschrift()
 
+def get_accounts():
+    con, cur = db_connect()
+    q = '''
+        SELECT number, name, last_update
+        FROM accounts
+        ORDER BY number ASC
+    '''
+    cur.execute(q)
+    return fetchall_dicts(cur)
+
 def get_saldo(account):
     con, cur = db_connect()
     q = '''
