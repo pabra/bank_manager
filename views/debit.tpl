@@ -12,11 +12,11 @@
     </thead>
     <tbody data-bind="foreach: {data: debitList}">
         <tr data-bind="css: $index() % 2 ? 'odd' : 'even'">
-            <td data-column="name" data-bind="text: name"></td>
+            <td data-column="name" data-bind="text: name, click: $root.gotoHref" class="clickable"></td>
             <td data-column="reported" data-bind="text: reported_loc"></td>
             <td data-column="last_happend" data-bind="text: last_happend_loc"></td>
-            <td data-column="occur_total" data-bind="text: occur_total"></td>
-            <td data-column="occur_last_year" data-bind="text: occur_last_year"></td>
+            <td data-column="occur_total" data-bind="text: occur_total, click: $root.gotoHref" class="clickable"></td>
+            <td data-column="occur_last_year" data-bind="text: occur_last_year, click: $root.gotoHref" class="clickable"></td>
         </tr>
     </tbody>
 </table>

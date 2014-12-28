@@ -86,6 +86,26 @@ BankDebit = function BankDebitFn() {
             mod.sortList(col, dir);
         };
 
+        self.gotoHref = function gotoHrefFn(mod, ev) {
+            var params = {account: account},
+                el = $(ev.target),
+                col = el.attr('data-column'),
+                myEl;
+            if ('name' === col) {
+                params.transferTo = el.text();
+            }
+            if ('occur_total' === col) {
+                myEl = el.parent().find('td[data-column=name]');
+                params.transferTo = myEl.text();
+            }
+            if ('occur_last_year' === col) {
+                myEl = el.parent().find('td[data-column=name]');
+                params.transferTo = myEl.text();
+                params.dateFrom = 'yearAgo';
+            }
+            location.href = 'transactions?' + $.param(params);
+        };
+
         self.sortColumn = ko.observable();
         self.sortDirection = ko.observable();
         self.debitList = ko.observableArray();
