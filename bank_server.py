@@ -118,6 +118,13 @@ def api(action, account):
         return {'data': data}
 
     if 'transactions' == action:
+        rq_get = bottle.request.GET.get
+
+        date_from = str_to_date(rq_get('date_from'))
+        date_to = str_to_date(rq_get('date_to'))
+        transfer_to = rq_get('transfer_to')
+        transfer_to_like = rq_get('transfer_to_like')
+
         q = '''
             SELECT
                 date,
@@ -131,6 +138,30 @@ def api(action, account):
             WHERE account = ?
         '''
         q_args = (account,)
+
+        if date_from:
+            q += '''
+                AND date >= ?
+            '''
+            q_args += (date_from,)
+
+        if date_to:
+            q += '''
+                AND date <= ?
+            '''
+            q_args += (date_to,)
+
+        if transfer_to:
+            q += '''
+                AND transfer_to = ?
+            '''
+            q_args += (transfer_to,)
+
+        if transfer_to_like:
+            q += '''
+                AND transfer_to LIKE ?
+            '''
+            q_args += ('%%%s%%' % transfer_to_like,)
 
         cur.execute(q, q_args)
         data = prepare_json(fetchall_dicts(cur))
