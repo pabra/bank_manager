@@ -113,7 +113,9 @@ def api(action, account):
         cur.execute(q, (account,
                         account,
                         year_ago))
-        return {'data': prepare_json(fetchall_dicts(cur))}
+        data = prepare_json(fetchall_dicts(cur))
+        db_close()
+        return {'data': data}
 
     if 'transactions' == action:
         q = '''
@@ -128,11 +130,12 @@ def api(action, account):
             FROM transactions
             WHERE account = ?
         '''
-        cur.execute(q, (account,))
-        return {'data': prepare_json(fetchall_dicts(cur))}
+        q_args = (account,)
 
-    db_close()
-    return {'a': ['1',2,datetime.date.today().isoformat(), action]}
+        cur.execute(q, q_args)
+        data = prepare_json(fetchall_dicts(cur))
+        db_close()
+        return {'data': data}
 
 if '__main__' == __name__:
     bottle.run(app=app,
