@@ -1,11 +1,11 @@
 /*global ko, account, routeName */
 'use strict';
-var WebFontConfig, strToDate, dateToStr,
+var WebFontConfig, strToDate, dateToStr, formatMoney, getLocationSearch,
     BankDebit, BankTransactions, debug_ooo;
 
 WebFontConfig = {google:{families:['Ubuntu+Mono::latin', 'Ubuntu:400,700:latin']}};
 
-strToDate = function strToDateFn(dStr){
+strToDate = function strToDateFn(dStr) {
     var parsed = dStr.match(/(\d{4})-(\d{2})-(\d{2})/),
         y, m, d, dObj;
     if(!parsed){
@@ -26,7 +26,7 @@ strToDate = function strToDateFn(dStr){
     return dObj;
 };
 
-dateToStr = function dateToStrFn(dObj, fmt){
+dateToStr = function dateToStrFn(dObj, fmt) {
     var Y = dObj.getUTCFullYear(),
         m = dObj.getUTCMonth() +1,
         d = dObj.getUTCDate(),
@@ -38,6 +38,22 @@ dateToStr = function dateToStrFn(dObj, fmt){
     return fmt.replace(/%d/g, lPad(d))
               .replace(/%m/g, lPad(m))
               .replace(/%Y/g, Y);
+};
+
+formatMoney = function formatMoneyFn(value) {
+    return String((value / 100).toFixed(2)).replace('.', ',').replace(/(\d)(\d{3}),/, '$1.$2,')+' €';
+};
+
+getLocationSearch = function getLocationSearchFn() {
+    var dict = {};
+    if (!location.search) {
+        return dict;
+    }
+    $.each(location.search.replace(/^\?/, '').split('&'), function() {
+        var kv = this.split('=');
+        dict[kv[0]] = decodeURIComponent(kv[1].replace(/\+/g, ' '));
+    });
+    return dict;
 };
 
 BankDebit = function BankDebitFn() {
