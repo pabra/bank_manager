@@ -110,10 +110,64 @@ BankDebit = function BankDebitFn() {
 };
 
 BankTransactions = function BankTransactionsFn() {
-    var init;
+    var _self = this,
+        Model, model, init;
+
+    Model = function ModelFn() {
+        var self = this;
+
+        self.transactionList = ko.observableArray();
+        self.readyForGet = ko.observable(false);
+        self.lastUri = ko.observable();
+        self.dateFrom = ko.observable();
+        self.dateTo = ko.observable();
+        self.transferTo = ko.observable();
+        self.getTransactions = ko.computed(function() {
+            if (!self.readyForGet()) {
+                return;
+            }
+            self.readyForGet(false);
+            var params = {},
+                uri;
+            if (self.dateFrom()) {
+                params.date_from = self.dateFrom();
+            }
+            if (self.dateTo()) {
+                params.date_to = self.dateTo();
+            }
+            if (self.transferTo()) {
+                params.transfer_to = self.transferTo();
+            }
+            uri = 'api/transactions/'+account+'?'+$.param(params);
+            if (uri === self.lastUri())  {
+                return;
+            }
+            self.lastUri(uri);
+            $.getJSON(uri, function(data) {
+                var list = data.data;
+                ko.utils.arrayForEach(list, function(x){
+                    x.date_loc = dateToStr(strToDate(x.date), '%d.%m.%Y');
+                    x.valuta_loc = dateToStr(strToDate(x.valuta), '%d.%m.%Y');
+                    x.value_loc = formatMoney(x.value);
+                });
+                model.transactionList(list);
+                self.readyForGet(true);
+            });
+        });
+    };
 
     init = function initFn() {
-        console.log('init BankTransactions');
+        model = new Model();
+        _self.ooo = model;
+        $.each(getLocationSearch(), function(k,v) {
+            if (v
+                && ko.isObservable(model[k])
+                && -1 !== $.inArray(k, ['transferTo', 'dateFrom', 'dateTo'])) {
+                model[k](v);
+            }
+        });
+        ko.applyBindings(model);
+        model.readyForGet(true);
     };
 
     init();
