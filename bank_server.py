@@ -81,7 +81,7 @@ def show_debit():
 
 @app.route('/api/<action>/<account:int>', method='GET')
 def api(action, account):
-    assert action in ('debit',)
+    assert action in ('debit', 'transactions')
     con, cur = db_connect()
     if 'debit' == action:
         today = datetime.date.today()
@@ -105,6 +105,22 @@ def api(action, account):
         cur.execute(q, (account,
                         account,
                         year_ago))
+        return {'data': prepare_json(fetchall_dicts(cur))}
+
+    if 'transactions' == action:
+        q = '''
+            SELECT
+                date,
+                valuta,
+                type,
+                subject,
+                transfer_from,
+                transfer_to,
+                value
+            FROM transactions
+            WHERE account = ?
+        '''
+        cur.execute(q, (account,))
         return {'data': prepare_json(fetchall_dicts(cur))}
 
     db_close()

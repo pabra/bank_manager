@@ -1,6 +1,7 @@
 /*global ko, account, routeName */
 'use strict';
-var WebFontConfig, strToDate, dateToStr, BankDebit, debug_ooo;
+var WebFontConfig, strToDate, dateToStr,
+    BankDebit, BankTransactions, debug_ooo;
 
 WebFontConfig = {google:{families:['Ubuntu+Mono::latin', 'Ubuntu:400,700:latin']}};
 
@@ -40,7 +41,8 @@ dateToStr = function dateToStrFn(dObj, fmt){
 };
 
 BankDebit = function BankDebitFn() {
-    var Model, model, init;
+    var _self = this,
+        Model, model, init;
 
     Model = function ModelFn() {
         var self = this;
@@ -75,6 +77,7 @@ BankDebit = function BankDebitFn() {
 
     init = function initFn() {
         model = new Model();
+        _self.ooo = model;
         ko.applyBindings(model);
         $.getJSON('api/debit/'+account, function(data) {
             var list = data.data;
@@ -90,8 +93,19 @@ BankDebit = function BankDebitFn() {
     init();
 };
 
+BankTransactions = function BankTransactionsFn() {
+    var init;
+
+    init = function initFn() {
+        console.log('init BankTransactions');
+    };
+
+    init();
+};
+
 $(function(){
-    var bankDebit, wf, s;
+    var bankDebit, bankTransactions,
+        wf, s;
 
     wf = document.createElement('script');
     wf.src = ('https:' === document.location.protocol ? 'https' : 'http') + '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
@@ -109,5 +123,8 @@ $(function(){
     if ('debit' === routeName) {
         bankDebit = new BankDebit();
         debug_ooo = bankDebit;
+    } else if ('transactions' === routeName) {
+        bankTransactions = new BankTransactions();
+        debug_ooo = bankTransactions;
     }
 });
