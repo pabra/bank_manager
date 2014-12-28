@@ -1,6 +1,8 @@
 /*global ko, account, routeName */
 'use strict';
-var strToDate, dateToStr, BankDebit, debug_ooo;
+var WebFontConfig, strToDate, dateToStr, BankDebit, debug_ooo;
+
+WebFontConfig = {google:{families:['Ubuntu+Mono::latin', 'Ubuntu:400,700:latin']}};
 
 strToDate = function strToDateFn(dStr){
     var parsed = dStr.match(/(\d{4})-(\d{2})-(\d{2})/),
@@ -89,7 +91,15 @@ BankDebit = function BankDebitFn() {
 };
 
 $(function(){
-    var bankDebit;
+    var bankDebit, wf, s;
+
+    wf = document.createElement('script');
+    wf.src = ('https:' === document.location.protocol ? 'https' : 'http') + '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+
     $('#header_links a').each(function(){
         var el = $(this);
         if (el.attr('href').split('?')[0] === routeName) {
