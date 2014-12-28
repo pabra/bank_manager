@@ -34,7 +34,7 @@ th.desc:after {
 }
 
 .clickable {
-    cursor: pointer;
+    cursor: url(cursor_sqlite.png), pointer;
     -moz-user-select: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
