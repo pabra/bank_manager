@@ -37,6 +37,14 @@ def prepare_json(obj, as_locale=False):
     elif isinstance(obj, tuple):
         return (str_date(x) for x in obj)
 
+def str_to_date(date_str):
+    if date_str in ('yearAgo', 'year_ago'):
+        date_str = (datetime.date.today() - datetime.timedelta(365)).isoformat()
+    try:
+        return datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+    except:
+        return None
+
 @app.route('/static/<filename>')
 def serve_static(filename):
     root = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'static')
