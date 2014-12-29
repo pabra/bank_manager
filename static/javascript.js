@@ -109,6 +109,9 @@ BankDebit = function BankDebitFn() {
         self.sortColumn = ko.observable();
         self.sortDirection = ko.observable();
         self.debitList = ko.observableArray();
+        self.caption = ko.pureComputed(function(){
+            return self.debitList().length + ' rows';
+        });
     };
 
     init = function initFn() {
@@ -142,6 +145,13 @@ BankTransactions = function BankTransactionsFn() {
         self.dateFrom = ko.observable();
         self.dateTo = ko.observable();
         self.transferTo = ko.observable();
+        self.caption = ko.pureComputed(function(){
+            var sum = 0;
+            $.each(self.transactionList(), function(){
+                sum += this.value;
+            });
+            return self.transactionList().length + ' rows - in sum ' + formatMoney(sum);
+        });
         self.getTransactions = ko.computed(function() {
             if (!self.readyForGet()) {
                 return;

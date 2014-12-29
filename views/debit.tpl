@@ -1,6 +1,7 @@
 % include('_header.tpl')
 <h1>Direct Debit</h1>
 <table>
+    <caption data-bind="text: caption"></caption>
     <thead>
         <tr>
             <th class="clickable" data-column="name" data-bind="click: clickSort, css: 'name'===sortColumn()?sortDirection():''">Name</th>

@@ -1,6 +1,7 @@
 % include('_header.tpl')
 <h1>Transactions</h1>
 <table>
+    <caption data-bind="text: caption"></caption>
     <thead>
         <th>date</th>
         <th>valuta</th>
