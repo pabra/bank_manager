@@ -122,6 +122,8 @@ def api(action, account):
 
         date_from = str_to_date(rq_get('date_from'))
         date_to = str_to_date(rq_get('date_to'))
+        transfer_from = rq_get('transfer_from')
+        transfer_from_like = rq_get('transfer_from_like')
         transfer_to = rq_get('transfer_to')
         transfer_to_like = rq_get('transfer_to_like')
 
@@ -150,6 +152,18 @@ def api(action, account):
                 AND date <= ?
             '''
             q_args += (date_to,)
+
+        if transfer_from:
+            q += '''
+                AND transfer_from = ?
+            '''
+            q_args += (transfer_from,)
+
+        if transfer_from_like:
+            q += '''
+                AND transfer_from LIKE ?
+            '''
+            q_args += ('%%%s%%' % transfer_from_like,)
 
         if transfer_to:
             q += '''

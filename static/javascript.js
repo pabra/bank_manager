@@ -144,7 +144,10 @@ BankTransactions = function BankTransactionsFn() {
         self.lastUri = ko.observable();
         self.dateFrom = ko.observable();
         self.dateTo = ko.observable();
+        self.transferFrom = ko.observable();
+        self.transferFromLike = ko.observable();
         self.transferTo = ko.observable();
+        self.transferToLike = ko.observable();
         self.caption = ko.pureComputed(function(){
             var sum = 0;
             $.each(self.transactionList(), function(){
@@ -165,8 +168,17 @@ BankTransactions = function BankTransactionsFn() {
             if (self.dateTo()) {
                 params.date_to = self.dateTo();
             }
+            if (self.transferFrom()) {
+                params.transfer_from = self.transferFrom();
+            }
+            if (self.transferFromLike()) {
+                params.transfer_from_like = self.transferFromLike();
+            }
             if (self.transferTo()) {
                 params.transfer_to = self.transferTo();
+            }
+            if (self.transferToLike()) {
+                params.transfer_to_like = self.transferToLike();
             }
             uri = 'api/transactions/'+account+'?'+$.param(params);
             if (uri === self.lastUri())  {
@@ -192,7 +204,12 @@ BankTransactions = function BankTransactionsFn() {
         $.each(getLocationSearch(), function(k,v) {
             if (v
                 && ko.isObservable(model[k])
-                && -1 !== $.inArray(k, ['transferTo', 'dateFrom', 'dateTo'])) {
+                && -1 !== $.inArray(k, ['transferFrom',
+                                        'transferFromLike',
+                                        'transferTo',
+                                        'transferToLike',
+                                        'dateFrom',
+                                        'dateTo'])) {
                 model[k](v);
             }
         });
