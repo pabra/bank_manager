@@ -16,7 +16,7 @@ var account = "{{account}}",
 <div id="header">
     <div id="header_links">
         <a href="summary?account={{account}}">Summary</a>
-        <a href="transactions?account={{account}}">Transactions</a>
+        <a href="transactions?account={{account}}&dateFrom=yearAgo">Transactions</a>
         <a href="debit?account={{account}}">Direct Debit</a>
     </div>
     <div id="header_accounts">
