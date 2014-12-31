@@ -19,7 +19,7 @@ from bs4 import BeautifulSoup
 
 DB_CONNECTION = False
 
-locale.setlocale(locale.LC_ALL, locale.getdefaultlocale())
+locale.setlocale(locale.LC_MONETARY, locale.getdefaultlocale())
 
 class Session(object):
     def __init__(self, account):
