@@ -9,8 +9,8 @@
         <th>saldo</th>
     </thead>
     <tbody data-bind="foreach: {data: summaryList}">
-        <tr data-bind="css: $index() % 2 ? 'odd' : 'even'">
-            <td data-bind="text: period"></td>
+        <tr data-bind="css: {odd: $index()%2, even: !($index()%2), month_row: !$parent.isClickable(period), year_row: $parent.isClickable(period)}">
+            <td data-bind="text: period, click: $parent.getSummaryYear, css: {clickable: $parent.isClickable(period)}"></td>
             <td data-bind="text: plus_loc, css: {money: true, pos: plus >= 0, neg: plus < 0}"></td>
             <td data-bind="text: minus_loc, css: {money: true, pos: minus >= 0, neg: minus < 0}"></td>
             <td data-bind="text: sum_loc, css: {money: true, pos: sum >= 0, neg: sum < 0}"></td>

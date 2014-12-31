@@ -13,16 +13,46 @@ a:hover {
     text-decoration: underline;
 }
 
-tr.even {
+table {
+    border-collapse: collapse;
+}
+
+td {
+    padding: 5px;
+}
+
+tr.year_row td {
+    border-top: 1px solid #777;
+    border-bottom: 1px solid #777;
+}
+
+tr.even td {
     background-color: #fff;
 }
 
-tr.odd {
+tr.odd td {
     background-color: #ddd;
+}
+
+tr.month_row td {
+    border-top: 1px solid #eee;
+}
+
+tr.month_row.even td {
+    background-color: #ccc;
+}
+
+tr.month_row.odd td {
+    background-color: #aaa;
 }
 
 th.asc:after {
     content: " \025B4";
+}
+
+tr.year_row td {
+    border-top: 1px solid #777;
+    border-bottom: 1px solid #777;
 }
 
 th.desc:after {
