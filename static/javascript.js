@@ -64,9 +64,12 @@ BankDebit = function BankDebitFn() {
         var self = this;
 
         self.sortList = function orderListFn(column, direction) {
+            var getVal = function getValFn(val) {
+                return 'string' === typeof val ? val.toLowerCase() : val;
+            };
             self.debitList.sort(function(a, b) {
-                var valA = 'string' === typeof a[column] ? a[column].toLowerCase() : a[column],
-                    valB = 'string' === typeof b[column] ? b[column].toLowerCase() : b[column];
+                var valA = getVal(a[column]),
+                    valB = getVal(b[column]);
                 if (valA > valB) {
                     return 'asc' === direction ? 1 : -1;
                 }
