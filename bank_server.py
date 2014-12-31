@@ -58,7 +58,7 @@ def show_index():
     account, accounts = handle_account_selection()
     db_close()
     return {'account': account,
-            'accounts': accounts}
+            'accounts': prepare_json(accounts, as_locale=True)}
 
 @app.route('/transactions')
 @bottle.view('transactions')
@@ -67,7 +67,7 @@ def show_transactions():
     account, accounts = handle_account_selection()
     db_close()
     return {'account': account,
-            'accounts': accounts}
+            'accounts': prepare_json(accounts, as_locale=True)}
 
 @app.route('/debit')
 @bottle.view('debit')
@@ -76,7 +76,7 @@ def show_debit():
     account, accounts = handle_account_selection()
     db_close()
     return {'account': account,
-            'accounts': accounts}
+            'accounts': prepare_json(accounts, as_locale=True)}
 
 @app.route('/api/<action>/<account:int>', method='GET')
 def api(action, account):

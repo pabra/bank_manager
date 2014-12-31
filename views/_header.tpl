@@ -21,7 +21,7 @@ var account = "{{account}}",
     </div>
     <div id="header_accounts">
 % for x in accounts:
-        <a href="?account={{x['number']}}" class="{{'active' if str(x['number']) == account else ''}}">{{x['number']}}</a>
+        <a href="?account={{x['number']}}" class="{{'active' if str(x['number']) == account else ''}}" title="last updated: {{x['last_update']}}">{{x['number']}}</a>
 % end
     </div>
 </div>
