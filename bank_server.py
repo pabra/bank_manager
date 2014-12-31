@@ -56,17 +56,9 @@ def serve_static(filename):
 def show_index():
     con, cur = db_connect()
     account, accounts = handle_account_selection()
-
-    q = '''
-        SELECT *
-        FROM debit_warn
-    '''
-    cur.execute(q)
-    res = cur.fetchall()
     db_close()
     return {'account': account,
-            'accounts': accounts,
-            'res': pprint.pformat(res)}
+            'accounts': accounts}
 
 @app.route('/transactions')
 @bottle.view('transactions')
@@ -82,15 +74,56 @@ def show_transactions():
 def show_debit():
     con, cur = db_connect()
     account, accounts = handle_account_selection()
-
     db_close()
     return {'account': account,
             'accounts': accounts}
 
 @app.route('/api/<action>/<account:int>', method='GET')
 def api(action, account):
-    assert action in ('debit', 'transactions')
+    assert action in ('debit', 'transactions', 'summary')
     con, cur = db_connect()
+    if 'summary' == action:
+        rq_get = bottle.request.GET.get
+        year = rq_get('year')
+
+        if year:
+            period_format = '%Y-%m'
+        else:
+            period_format = '%Y'
+
+        q = '''
+            SELECT
+                STRFTIME(?, t.date)                       AS period,
+                SUM(CASE WHEN t.value >= 0
+                    THEN t.value ELSE 0 END)              AS plus,
+                SUM(CASE WHEN t.value < 0
+                    THEN t.value ELSE 0 END)              AS minus,
+                SUM(t.value)                              AS sum,
+                (SELECT _.init_saldo
+                 FROM accounts _
+                 WHERE _.number = t.account) +
+                (SELECT SUM(_.value)
+                 FROM transactions _
+                 WHERE _.account = t.account
+                   AND _.date <= t.date) AS saldo
+            FROM transactions t
+            WHERE account = ?
+              %s
+            GROUP BY period
+            ORDER BY period ASC
+        '''
+        q_args = (period_format, account)
+        if year:
+            q %= 'AND STRFTIME("%Y", t.date) = ?'
+            q_args += (year,)
+        else:
+            q %= ''
+
+        cur.execute(q, q_args)
+        data = prepare_json(fetchall_dicts(cur))
+        db_close()
+        return {'data': data}
+
     if 'debit' == action:
         today = datetime.date.today()
         year_ago = today - datetime.timedelta(365)

@@ -1,7 +1,7 @@
 /*global ko, account, routeName */
 'use strict';
 var WebFontConfig, strToDate, dateToStr, formatMoney, getLocationSearch,
-    BankDebit, BankTransactions, debug_ooo;
+    BankDebit, BankTransactions, BankSummary, debug_ooo;
 
 WebFontConfig = {google:{families:['Ubuntu+Mono::latin', 'Ubuntu:400,700:latin']}};
 
@@ -223,8 +223,37 @@ BankTransactions = function BankTransactionsFn() {
     init();
 };
 
+BankSummary = function BankSummaryFn() {
+    var _self = this,
+        Model, model, init;
+
+    Model = function ModelFn() {
+        var self = this;
+
+        self.summaryList = ko.observableArray();
+    };
+
+    init = function initFn() {
+        model = new Model();
+        _self.ooo = model;
+        ko.applyBindings(model);
+        $.getJSON('api/summary/'+account, function(data) {
+            var list = data.data;
+            ko.utils.arrayForEach(list, function(x){
+                x.plus_loc = formatMoney(x.plus);
+                x.minus_loc = formatMoney(x.minus);
+                x.sum_loc = formatMoney(x.sum);
+                x.saldo_loc = formatMoney(x.saldo);
+            });
+            model.summaryList(list);
+        });
+    };
+
+    init();
+};
+
 $(function(){
-    var bankDebit, bankTransactions,
+    var bankDebit, bankTransactions, bankSummary,
         wf, s;
 
     wf = document.createElement('script');
@@ -246,5 +275,8 @@ $(function(){
     } else if ('transactions' === routeName) {
         bankTransactions = new BankTransactions();
         debug_ooo = bankTransactions;
+    } else if ('summary' === routeName) {
+        bankSummary = new BankSummary();
+        debug_ooo = bankSummary;
     }
 });
