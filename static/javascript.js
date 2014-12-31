@@ -228,12 +228,80 @@ BankTransactions = function BankTransactionsFn() {
 
 BankSummary = function BankSummaryFn() {
     var _self = this,
+        extendSummaryList,
         Model, model, init;
+
+    extendSummaryList = function extentSummaryListFn(list) {
+        ko.utils.arrayForEach(list, function(x){
+            x.plus_loc = formatMoney(x.plus);
+            x.minus_loc = formatMoney(x.minus);
+            x.sum_loc = formatMoney(x.sum);
+            x.saldo_loc = formatMoney(x.saldo);
+        });
+
+        return list;
+    };
 
     Model = function ModelFn() {
         var self = this;
 
         self.summaryList = ko.observableArray();
+        self.sort = function sortFn() {
+            var getVal = function getValFn(val) {
+                return self.isClickable(val) ? val+'-z' : val;
+            };
+            self.summaryList.sort(function(a, b) {
+                var valA = getVal(a.period),
+                    valB = getVal(b.period);
+                if (valA > valB) {
+                    return 1;
+                }
+                if (valA < valB) {
+                    return -1;
+                }
+                return 0;
+            });
+        };
+
+        self.cleanSummaryList = function cleanSummaryListFn() {
+            var findDetailRow, detailRow;
+
+            findDetailRow = function findDetailRowFn() {
+                var i = -1;
+                ko.utils.arrayForEach(self.summaryList(), function(v, k) {
+                    if (-1 === i && !self.isClickable(v.period)) {
+                        i = k;
+                    }
+                });
+                return i;
+            };
+
+            for(detailRow = findDetailRow(); -1 !== detailRow; detailRow = findDetailRow()) {
+                self.summaryList.splice(detailRow, 1);
+            }
+        };
+
+        self.isClickable = function isClickableFn(period) {
+            //console.log('isClickable');
+            //console.log(period);
+            return period.match(/^\d{4}$/) ? true : false;
+        };
+
+        self.getSummaryYear = function getSummaryYearFn(mod) {
+            if (!self.isClickable(mod.period)) {
+                return;
+            }
+            var params = {year: mod.period};
+            self.cleanSummaryList();
+            $.getJSON('api/summary/'+account+'?'+$.param(params), function(data) {
+                var list = extendSummaryList(data.data);
+                ko.utils.arrayForEach(list, function(x) {
+                    model.summaryList.push(x);
+                });
+                self.sort();
+                //console.log(list);
+            });
+        };
     };
 
     init = function initFn() {
@@ -241,13 +309,7 @@ BankSummary = function BankSummaryFn() {
         _self.ooo = model;
         ko.applyBindings(model);
         $.getJSON('api/summary/'+account, function(data) {
-            var list = data.data;
-            ko.utils.arrayForEach(list, function(x){
-                x.plus_loc = formatMoney(x.plus);
-                x.minus_loc = formatMoney(x.minus);
-                x.sum_loc = formatMoney(x.sum);
-                x.saldo_loc = formatMoney(x.saldo);
-            });
+            var list = extendSummaryList(data.data);
             model.summaryList(list);
         });
     };
