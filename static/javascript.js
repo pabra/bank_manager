@@ -70,7 +70,7 @@ BankDebit = function BankDebitFn() {
                 if (valA > valB) {
                     return 'asc' === direction ? 1 : -1;
                 }
-                if (a[column] < b[column]) {
+                if (valA < valB) {
                     return 'asc' === direction ? -1 : 1;
                 }
                 return 0;
