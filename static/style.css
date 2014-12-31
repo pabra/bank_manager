@@ -1,7 +1,7 @@
 body {
     background: #eee;
     padding: 100px;
-    font-family: Ubuntu;
+    font-family: Ubuntu, sans-serif;
 }
 
 a {
@@ -41,4 +41,18 @@ th.desc:after {
     -ms-user-select: none;
     user-select: none;
     -o-user-select: none;
+}
+
+.money {
+    text-align: right;
+    font-family: Ubuntu Mono, monospace;
+    white-space: nowrap;
+}
+
+.money.pos {
+    color: green;
+}
+
+.money.neg {
+    color: maroon;
 }

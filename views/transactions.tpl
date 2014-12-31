@@ -1,7 +1,7 @@
 % include('_header.tpl')
 <h1>Transactions</h1>
 <table>
-    <caption data-bind="text: caption"></caption>
+    <caption data-bind="html: caption"></caption>
     <thead>
         <th>date</th>
         <th>valuta</th>
@@ -19,7 +19,7 @@
             <td data-bind="text: subject"></td>
             <td data-bind="text: transfer_from"></td>
             <td data-bind="text: transfer_to"></td>
-            <td data-bind="text: value_loc"></td>
+            <td data-bind="text: value_loc, css: {money: true, pos: value >= 0, neg: value < 0}"></td>
         </tr>
     </tbody>
 </table>

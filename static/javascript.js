@@ -153,7 +153,10 @@ BankTransactions = function BankTransactionsFn() {
             $.each(self.transactionList(), function(){
                 sum += this.value;
             });
-            return self.transactionList().length + ' rows - in sum ' + formatMoney(sum);
+            return (self.transactionList().length
+                    + ' rows - in sum <span class="money '
+                    + (sum >= 0 ? 'pos' : 'neg')+'">'
+                    + formatMoney(sum) + '</span>');
         });
         self.getTransactions = ko.computed(function() {
             if (!self.readyForGet()) {
