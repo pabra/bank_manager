@@ -297,6 +297,27 @@ BankSummary = function BankSummaryFn() {
             }
         };
 
+        self.gotoTransactions = function gotoTransactionsFn(row, ev) {
+            var params = {account: account},
+                el = $(ev.target),
+                periodMatch = row.period.match(/^(\d{4})(?:-(\d{2}))?$/);
+
+            if (el.hasClass('values_plus')) {
+                params.valueCompare = 'gte0';
+            } else if (el.hasClass('values_minus')) {
+                params.valueCompare = 'lt0';
+            }
+            if (periodMatch[2]) {   // month row
+                params.dateFrom = periodMatch[1]+'-'+periodMatch[2]+'-01';
+                params.dateTo = lastOfMonth(params.dateFrom);
+            } else {                // year row
+                params.dateFrom = periodMatch[1]+'-01-01';
+                params.dateTo = periodMatch[1]+'-12-31';
+            }
+
+            location.href = 'transactions?' + $.param(params);
+        };
+
         self.isClickable = function isClickableFn(period) {
             //console.log('isClickable');
             //console.log(period);
