@@ -25,12 +25,12 @@
     </thead>
     <tbody data-bind="foreach: {data: transactionList}">
         <tr data-bind="css: $index() % 2 ? 'odd' : 'even'">
-            <td data-bind="text: date_loc"></td>
-            <td data-bind="text: valuta_loc"></td>
-            <td data-bind="text: type"></td>
-            <td data-bind="text: subject"></td>
-            <td data-bind="text: transfer_from"></td>
-            <td data-bind="text: transfer_to"></td>
+            <td class="mono" data-bind="text: date_loc"></td>
+            <td class="mono" data-bind="text: valuta_loc"></td>
+            <td class="mono" data-bind="text: type"></td>
+            <td class="mono" data-bind="text: subject"></td>
+            <td class="mono" data-bind="text: transfer_from"></td>
+            <td class="mono" data-bind="text: transfer_to"></td>
             <td data-bind="text: value_loc,
                            css: {money: 1,
                                  pos: value >= 0,

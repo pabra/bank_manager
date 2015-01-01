@@ -13,7 +13,7 @@
                              even: !($index()%2),
                              month_row: !$parent.isClickable(period),
                              year_row: $parent.isClickable(period)}">
-            <td class="money bold more_left_pedding more_right_pedding"
+            <td class="bold mono more_left_pedding more_right_pedding"
                 data-bind="text: period, click: $parent.getSummaryYear, css: {clickable: $parent.isClickable(period)}"></td>
             <td class="money more_left_pedding" data-bind="text: plus_count"></td>
             <td data-bind="text: plus_loc,

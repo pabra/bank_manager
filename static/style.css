@@ -78,6 +78,10 @@ th.desc:after {
     -o-user-select: none;
 }
 
+.mono {
+    font-family: Ubuntu Mono, monospace;
+}
+
 .money {
     text-align: right;
     font-family: Ubuntu Mono, monospace;
