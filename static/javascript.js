@@ -147,6 +147,7 @@ BankTransactions = function BankTransactionsFn() {
         self.lastUri = ko.observable();
         self.dateFrom = ko.observable();
         self.dateTo = ko.observable();
+        self.valueCompare = ko.observable();
         self.transferFrom = ko.observable();
         self.transferFromLike = ko.observable();
         self.transferTo = ko.observable();
@@ -186,6 +187,9 @@ BankTransactions = function BankTransactionsFn() {
             if (self.transferToLike()) {
                 params.transfer_to_like = self.transferToLike();
             }
+            if (self.valueCompare()) {
+                params.value_compare = self.valueCompare();
+            }
             uri = 'api/transactions/'+account+'?'+$.param(params);
             if (uri === self.lastUri())  {
                 return;
@@ -214,6 +218,7 @@ BankTransactions = function BankTransactionsFn() {
                                         'transferFromLike',
                                         'transferTo',
                                         'transferToLike',
+                                        'valueCompare',
                                         'dateFrom',
                                         'dateTo'])) {
                 model[k](v);

@@ -2,6 +2,7 @@
 import os
 import bottle
 import datetime
+import re
 import pprint
 from bank_action import db_connect, db_close, get_accounts, fetchall_dicts
 
@@ -44,6 +45,20 @@ def str_to_date(date_str):
         return datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
     except:
         return None
+
+def parse_value_compare(s):
+    if not s:
+        return None, None
+    match = re.match(r'^((?:g|l)te?)(\d+)$', s)
+    sign_dict = {'lt':  '<',
+                 'lte': '<=',
+                 'gt':  '>',
+                 'gte': '>='}
+    if match:
+         sign, value = match.groups()
+         return sign_dict[sign], int(value)
+
+    return None, None
 
 @app.route('/static/<filename>')
 def serve_static(filename):
@@ -164,6 +179,7 @@ def api(action, account):
         transfer_from_like = rq_get('transfer_from_like')
         transfer_to = rq_get('transfer_to')
         transfer_to_like = rq_get('transfer_to_like')
+        value_compare_sign, value_compare_value = parse_value_compare(rq_get('value_compare'))
 
         q = '''
             SELECT
@@ -214,6 +230,11 @@ def api(action, account):
                 AND transfer_to LIKE ?
             '''
             q_args += ('%%%s%%' % transfer_to_like,)
+        if value_compare_sign:
+            q += '''
+                AND value %s ?
+            ''' % value_compare_sign
+            q_args += (value_compare_value,)
 
         cur.execute(q, q_args)
         data = prepare_json(fetchall_dicts(cur))
