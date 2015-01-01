@@ -154,6 +154,17 @@ BankTransactions = function BankTransactionsFn() {
         var self = this;
 
         self.transactionList = ko.observableArray();
+        self.sumList = ko.observableArray();
+        self.sumListSumValue = ko.pureComputed(function() {
+            var sum = 0;
+            ko.utils.arrayForEach(self.sumList(), function(x) {
+                sum += x.value;
+            });
+            return sum;
+        });
+        self.sumListSumValueLoc = ko.pureComputed(function() {
+            return formatMoney(self.sumListSumValue());
+        });
         self.readyForGet = ko.observable(false);
         self.lastUri = ko.observable();
         self.dateFrom = ko.observable();
@@ -217,6 +228,15 @@ BankTransactions = function BankTransactionsFn() {
                 self.readyForGet(true);
             });
         });
+
+        self.clickForSum = function clickForSumFn(transaction) {
+            var idx = self.sumList.indexOf(transaction);
+            if (-1 === idx) {
+                self.sumList.push(transaction);
+            } else {
+                self.sumList.splice(idx, 1);
+            }
+        };
     };
 
     init = function initFn() {

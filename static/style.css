@@ -87,3 +87,20 @@ th.desc:after {
 .money.neg {
     color: maroon;
 }
+
+#sum_box {
+    position: fixed;
+    top: 100px;
+    right: 7px;
+    width: 90px;
+    padding: 2px;
+    background: #eed;
+    border: 1px solid #aaa;
+    box-shadow: 2px 2px 10px 0 rgba(0,0,0,0.2);
+}
+#sum_box .sum_line {
+    background: #ffe;
+    font-weight: bold;
+    border-top: 1px solid #777;
+    border-bottom: 3px double #777;
+}
