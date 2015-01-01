@@ -74,7 +74,7 @@ BankDebit = function BankDebitFn() {
     Model = function ModelFn() {
         var self = this;
 
-        self.sortList = function orderListFn(column, direction) {
+        self.sortList = function sortListFn(column, direction) {
             var getVal = function getValFn(val) {
                 return 'string' === typeof val ? val.toLowerCase() : val;
             };
@@ -167,6 +167,8 @@ BankTransactions = function BankTransactionsFn() {
         });
         self.readyForGet = ko.observable(false);
         self.lastUri = ko.observable();
+        self.sortColumn = ko.observable();
+        self.sortDirection = ko.observable();
         self.dateFrom = ko.observable();
         self.dateTo = ko.observable();
         self.valueCompare = ko.observable();
@@ -225,6 +227,7 @@ BankTransactions = function BankTransactionsFn() {
                     x.value_loc = formatMoney(x.value);
                 });
                 model.transactionList(list);
+                model.sortList(self.sortColumn(), self.sortDirection());
                 self.readyForGet(true);
             });
         });
@@ -236,6 +239,32 @@ BankTransactions = function BankTransactionsFn() {
             } else {
                 self.sumList.splice(idx, 1);
             }
+        };
+
+        self.sortList = function sortListFn(column, direction) {
+            var getVal = function getValFn(val) {
+                return 'string' === typeof val ? val.toLowerCase() : val;
+            };
+            self.transactionList.sort(function(a, b) {
+                var valA = getVal(a[column]),
+                    valB = getVal(b[column]);
+                if (valA > valB) {
+                    return 'asc' === direction ? 1 : -1;
+                }
+                if (valA < valB) {
+                    return 'asc' === direction ? -1 : 1;
+                }
+                return 0;
+            });
+            self.sortColumn(column);
+            self.sortDirection(direction);
+        };
+
+        self.clickSort = function clickSortFn(mod, ev) {
+            var col = $(ev.target).attr('data-column'),
+                dir = mod.sortColumn() === col && mod.sortDirection() === 'asc' ? 'desc' : 'asc';
+
+            mod.sortList(col, dir);
         };
     };
 
@@ -256,6 +285,7 @@ BankTransactions = function BankTransactionsFn() {
             }
         });
         ko.applyBindings(model);
+        model.sortList('date', 'desc');
         model.readyForGet(true);
     };
 

@@ -15,13 +15,13 @@
 <table>
     <caption data-bind="html: caption"></caption>
     <thead>
-        <th>date</th>
-        <th>valuta</th>
-        <th>type</th>
-        <th>subject</th>
-        <th>from</th>
-        <th>to</th>
-        <th>value</th>
+        <th class="clickable" data-column="date" data-bind="click: clickSort, css: 'date'===sortColumn()?sortDirection():''">date</th>
+        <th class="clickable" data-column="valuta" data-bind="click: clickSort, css: 'valuta'===sortColumn()?sortDirection():''">valuta</th>
+        <th class="clickable" data-column="type" data-bind="click: clickSort, css: 'type'===sortColumn()?sortDirection():''">type</th>
+        <th class="clickable" data-column="subject" data-bind="click: clickSort, css: 'subject'===sortColumn()?sortDirection():''">subject</th>
+        <th class="clickable" data-column="transfer_from" data-bind="click: clickSort, css: 'transfer_from'===sortColumn()?sortDirection():''">from</th>
+        <th class="clickable" data-column="transfer_to" data-bind="click: clickSort, css: 'transfer_to'===sortColumn()?sortDirection():''">to</th>
+        <th class="clickable" data-column="value" data-bind="click: clickSort, css: 'value'===sortColumn()?sortDirection():''">value</th>
     </thead>
     <tbody data-bind="foreach: {data: transactionList}">
         <tr data-bind="css: $index() % 2 ? 'odd' : 'even'">
