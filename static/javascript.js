@@ -291,7 +291,8 @@ BankSummary = function BankSummaryFn() {
             if (!self.isClickable(mod.period)) {
                 return;
             }
-            var params = {year: mod.period};
+            var params = {year: mod.period},
+                scrollPosTop = $(window).scrollTop();
             self.cleanSummaryList();
             $.getJSON('api/summary/'+account+'?'+$.param(params), function(data) {
                 var list = extendSummaryList(data.data);
@@ -300,6 +301,7 @@ BankSummary = function BankSummaryFn() {
                 });
                 self.sort();
                 //console.log(list);
+                $(window).scrollTop(scrollPosTop);
             });
         };
     };
