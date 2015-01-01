@@ -93,19 +93,24 @@ def api(action, account):
 
         q = '''
             SELECT
-                STRFTIME(?, t.date)                       AS period,
+                STRFTIME(?, t.date)             AS period,
                 SUM(CASE WHEN t.value >= 0
-                    THEN t.value ELSE 0 END)              AS plus,
+                    THEN t.value ELSE 0 END)    AS plus_sum,
+                COUNT(CASE WHEN t.value >= 0
+                      THEN 1 ELSE NULL END)     AS plus_count,
                 SUM(CASE WHEN t.value < 0
-                    THEN t.value ELSE 0 END)              AS minus,
-                SUM(t.value)                              AS sum,
+                    THEN t.value ELSE 0 END)    AS minus_sum,
+                COUNT(CASE WHEN t.value < 0
+                      THEN 1 ELSE NULL END)     AS minus_count,
+                SUM(t.value)                    AS sum_sum,
+                COUNT(t.value)                  AS sum_count,
                 (SELECT _.init_saldo
                  FROM accounts _
                  WHERE _.number = t.account) +
                 (SELECT SUM(_.value)
                  FROM transactions _
                  WHERE _.account = t.account
-                   AND _.date <= t.date) AS saldo
+                   AND _.date <= t.date)        AS saldo
             FROM transactions t
             WHERE account = ?
               %s

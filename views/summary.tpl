@@ -3,17 +3,20 @@
 <table>
     <thead>
         <th>period</th>
-        <th>+</th>
-        <th>-</th>
-        <th>&sum;</th>
+        <th colspan="2">+</th>
+        <th colspan="2">-</th>
+        <th colspan="2">&sum;</th>
         <th>saldo</th>
     </thead>
     <tbody data-bind="foreach: {data: summaryList}">
         <tr data-bind="css: {odd: $index()%2, even: !($index()%2), month_row: !$parent.isClickable(period), year_row: $parent.isClickable(period)}">
             <td data-bind="text: period, click: $parent.getSummaryYear, css: {clickable: $parent.isClickable(period)}"></td>
-            <td data-bind="text: plus_loc, css: {money: true, pos: plus >= 0, neg: plus < 0}"></td>
-            <td data-bind="text: minus_loc, css: {money: true, pos: minus >= 0, neg: minus < 0}"></td>
-            <td data-bind="text: sum_loc, css: {money: true, pos: sum >= 0, neg: sum < 0}"></td>
+            <td data-bind="text: plus_count, css: 'money'"></td>
+            <td data-bind="text: plus_loc, css: {money: true, pos: plus_sum >= 0, neg: plus_sum < 0}"></td>
+            <td data-bind="text: minus_count, css: 'money'"></td>
+            <td data-bind="text: minus_loc, css: {money: true, pos: minus_sum >= 0, neg: minus_sum < 0}"></td>
+            <td data-bind="text: sum_count, css: 'money'"></td>
+            <td data-bind="text: sum_loc, css: {money: true, pos: sum_sum >= 0, neg: sum_sum < 0}"></td>
             <td data-bind="text: saldo_loc, css: {money: true, pos: saldo >= 0, neg: saldo < 0}"></td>
         </tr>
     </tbody>

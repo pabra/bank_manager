@@ -233,9 +233,9 @@ BankSummary = function BankSummaryFn() {
 
     extendSummaryList = function extentSummaryListFn(list) {
         ko.utils.arrayForEach(list, function(x){
-            x.plus_loc = formatMoney(x.plus);
-            x.minus_loc = formatMoney(x.minus);
-            x.sum_loc = formatMoney(x.sum);
+            x.plus_loc = formatMoney(x.plus_sum);
+            x.minus_loc = formatMoney(x.minus_sum);
+            x.sum_loc = formatMoney(x.sum_sum);
             x.saldo_loc = formatMoney(x.saldo);
         });
 
