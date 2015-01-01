@@ -21,9 +21,14 @@ td {
     padding: 5px;
 }
 
-tr.year_row td {
+td {
     border-top: 1px solid #777;
     border-bottom: 1px solid #777;
+}
+
+tr.month_row td {
+    border-bottom: 1px solid #997;
+    border-top: 1px solid #997;
 }
 
 tr.even td {
@@ -34,16 +39,12 @@ tr.odd td {
     background-color: #ddd;
 }
 
-tr.month_row td {
-    border-top: 1px solid #eee;
-}
-
 tr.month_row.even td {
-    background-color: #ccc;
+    background-color: #ffe;
 }
 
 tr.month_row.odd td {
-    background-color: #aaa;
+    background-color: #ddc;
 }
 
 th.asc:after {
