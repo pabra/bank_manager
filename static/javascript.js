@@ -344,11 +344,11 @@ BankSummary = function BankSummaryFn() {
             return period.match(/^\d{4}$/) ? true : false;
         };
 
-        self.getSummaryYear = function getSummaryYearFn(mod) {
-            if (!self.isClickable(mod.period)) {
+        self.getSummaryYear = function getSummaryYearFn(row) {
+            if (!self.isClickable(row.period)) {
                 return;
             }
-            var params = {year: mod.period},
+            var params = {year: row.period},
                 scrollPosTop = $(window).scrollTop();
             self.cleanSummaryList();
             $.getJSON('api/summary/'+account+'?'+$.param(params), function(data) {
@@ -357,7 +357,6 @@ BankSummary = function BankSummaryFn() {
                     model.summaryList.push(x);
                 });
                 self.sort();
-                //console.log(list);
                 $(window).scrollTop(scrollPosTop);
             });
         };
@@ -370,6 +369,7 @@ BankSummary = function BankSummaryFn() {
         $.getJSON('api/summary/'+account, function(data) {
             var list = extendSummaryList(data.data);
             model.summaryList(list);
+            model.getSummaryYear({period: list[list.length -1].period});
         });
     };
 
