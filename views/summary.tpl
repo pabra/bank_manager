@@ -13,8 +13,9 @@
                              even: !($index()%2),
                              month_row: !$parent.isClickable(period),
                              year_row: $parent.isClickable(period)}">
-            <td class="money bold period" data-bind="text: period, click: $parent.getSummaryYear, css: {clickable: $parent.isClickable(period)}"></td>
-            <td data-bind="text: plus_count, css: 'money'"></td>
+            <td class="money bold more_left_pedding more_right_pedding"
+                data-bind="text: period, click: $parent.getSummaryYear, css: {clickable: $parent.isClickable(period)}"></td>
+            <td class="money more_left_pedding" data-bind="text: plus_count"></td>
             <td data-bind="text: plus_loc,
                            css: {money: 1,
                                  pos: plus_sum >= 0,
@@ -22,7 +23,7 @@
                                  values_plus: 1,
                                  clickable: 1},
                            click: $parent.gotoTransactions"></td>
-            <td data-bind="text: minus_count, css: 'money'"></td>
+            <td class="money more_left_pedding" data-bind="text: minus_count"></td>
             <td data-bind="text: minus_loc,
                            css: {money: 1,
                                  pos: minus_sum >= 0,
@@ -30,14 +31,15 @@
                                  values_minus: 1,
                                  clickable: 1},
                            click: $parent.gotoTransactions"></td>
-            <td data-bind="text: sum_count, css: 'money'"></td>
+            <td class="money more_left_pedding" data-bind="text: sum_count"></td>
             <td data-bind="text: sum_loc,
                            css: {money: 1,
                                  pos: sum_sum >= 0,
                                  neg: sum_sum < 0,
                                  clickable: 1},
                            click: $parent.gotoTransactions"></td>
-            <td class="money bold saldo" data-bind="text: saldo_loc, css: {pos: saldo >= 0, neg: saldo < 0}"></td>
+            <td class="money bold more_left_pedding more_right_pedding"
+                data-bind="text: saldo_loc, css: {pos: saldo >= 0, neg: saldo < 0}"></td>
         </tr>
     </tbody>
 </table>
