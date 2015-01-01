@@ -3,7 +3,7 @@
 var WebFontConfig, strToDate, dateToStr, lastOfMonth, formatMoney, getLocationSearch,
     BankDebit, BankTransactions, BankSummary, debug_ooo;
 
-WebFontConfig = {google:{families:['Ubuntu+Mono::latin', 'Ubuntu:400,700:latin']}};
+WebFontConfig = {google:{families:['Ubuntu+Mono:400,700:latin', 'Ubuntu:400,700:latin']}};
 
 strToDate = function strToDateFn(dStr) {
     var parsed = dStr.match(/(\d{4})-(\d{2})-(\d{2})/),

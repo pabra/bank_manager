@@ -13,7 +13,7 @@
                              even: !($index()%2),
                              month_row: !$parent.isClickable(period),
                              year_row: $parent.isClickable(period)}">
-            <td data-bind="text: period, click: $parent.getSummaryYear, css: {clickable: $parent.isClickable(period)}"></td>
+            <td class="money bold period" data-bind="text: period, click: $parent.getSummaryYear, css: {clickable: $parent.isClickable(period)}"></td>
             <td data-bind="text: plus_count, css: 'money'"></td>
             <td data-bind="text: plus_loc,
                            css: {money: 1,
@@ -37,7 +37,7 @@
                                  neg: sum_sum < 0,
                                  clickable: 1},
                            click: $parent.gotoTransactions"></td>
-            <td data-bind="text: saldo_loc, css: {money: 1, pos: saldo >= 0, neg: saldo < 0}"></td>
+            <td class="money bold saldo" data-bind="text: saldo_loc, css: {pos: saldo >= 0, neg: saldo < 0}"></td>
         </tr>
     </tbody>
 </table>

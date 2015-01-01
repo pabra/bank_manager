@@ -51,6 +51,12 @@ th.asc:after {
     content: " \025B4";
 }
 
+td.saldo,
+td.period {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
 tr.year_row td {
     border-top: 1px solid #777;
     border-bottom: 1px solid #777;
@@ -61,6 +67,10 @@ th.desc:after {
 }
 
 #header a.active {
+    font-weight: bold;
+}
+
+.bold {
     font-weight: bold;
 }
 
