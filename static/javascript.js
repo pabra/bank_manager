@@ -1,6 +1,6 @@
 /*global ko, account, routeName */
 'use strict';
-var WebFontConfig, strToDate, dateToStr, formatMoney, getLocationSearch,
+var WebFontConfig, strToDate, dateToStr, lastOfMonth, formatMoney, getLocationSearch,
     BankDebit, BankTransactions, BankSummary, debug_ooo;
 
 WebFontConfig = {google:{families:['Ubuntu+Mono::latin', 'Ubuntu:400,700:latin']}};
@@ -38,6 +38,17 @@ dateToStr = function dateToStrFn(dObj, fmt) {
     return fmt.replace(/%d/g, lPad(d))
               .replace(/%m/g, lPad(m))
               .replace(/%Y/g, Y);
+};
+
+lastOfMonth = function lastOfMonthFn(dStr) {
+    var dMatch = dStr.match(/^(\d{4})-(\d{2})-\d{2}$/),
+        y, m;
+    if (!dMatch) {
+        return false;
+    }
+    y = parseInt(dMatch[1], 10);
+    m = parseInt(dMatch[2], 10) -1;
+    return dateToStr(new Date(y, (m +1), 0, 3, 3, 3));
 };
 
 formatMoney = function formatMoneyFn(value) {
