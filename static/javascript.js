@@ -429,6 +429,17 @@ $(function(){
     } else if ('transactions' === routeName) {
         bankTransactions = new BankTransactions();
         debug_ooo = bankTransactions;
+        $(window).scroll(function(){
+            var st = $(window).scrollTop(),
+                tr = parseInt($('tbody tr:first').offset().top, 10),
+                sb = $('#sum_box');
+
+            if (tr - st < 10) {
+                sb.css({top: '10px'});
+            } else {
+                sb.css({top: (tr-st+1)+'px'});
+            }
+        });
     } else if ('summary' === routeName) {
         bankSummary = new BankSummary();
         debug_ooo = bankSummary;
