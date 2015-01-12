@@ -5,7 +5,8 @@
             <div data-bind="text: value_loc,
                             css: {money: 1,
                                   pos: value >= 0,
-                                  neg: value < 0}"></div>
+                                  neg: value < 0,
+                                  highlight: hover}"></div>
     </div>
     <div class="money sum_line"
          data-bind="text: sumListSumValueLoc,
@@ -24,7 +25,10 @@
         <th class="clickable" data-column="value" data-bind="click: clickSort, css: 'value'===sortColumn()?sortDirection():''">value</th>
     </thead>
     <tbody data-bind="foreach: {data: transactionList}">
-        <tr data-bind="css: $index() % 2 ? 'odd' : 'even'">
+        <tr data-bind="event: {mouseenter: $parent.mouseenter, mouseleave: $parent.mouseleave},
+                       css: {odd: $index() % 2,
+                             even: !$index() % 2,
+                             highlight: hover}">
             <td class="mono" data-bind="text: date_loc"></td>
             <td class="mono" data-bind="text: valuta_loc"></td>
             <td class="mono" data-bind="text: type"></td>

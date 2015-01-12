@@ -47,6 +47,10 @@ tr.month_row.odd td {
     background-color: #ddc;
 }
 
+tr.highlight td, div.highlight {
+    background: #ccc;
+}
+
 th.asc:after {
     content: " \025B4";
 }

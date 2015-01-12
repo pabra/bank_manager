@@ -225,6 +225,7 @@ BankTransactions = function BankTransactionsFn() {
                     x.date_loc = dateToStr(strToDate(x.date), '%d.%m.%Y');
                     x.valuta_loc = dateToStr(strToDate(x.valuta), '%d.%m.%Y');
                     x.value_loc = formatMoney(x.value);
+                    x.hover = ko.observable(false);
                 });
                 model.transactionList(list);
                 model.sortList(self.sortColumn(), self.sortDirection());
@@ -239,6 +240,14 @@ BankTransactions = function BankTransactionsFn() {
             } else {
                 self.sumList.splice(idx, 1);
             }
+        };
+
+        self.mouseenter = function mouseenterFn(row) {
+            row.hover(true);
+        };
+
+        self.mouseleave = function mouseleaveFn(row) {
+            row.hover(false);
         };
 
         self.sortList = function sortListFn(column, direction) {
