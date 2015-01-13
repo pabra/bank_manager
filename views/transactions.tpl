@@ -3,6 +3,7 @@
 <div id="sum_box" data-bind="visible: sumList().length">
     <div data-bind="foreach: {data: sumList}">
             <div data-bind="text: value_loc,
+                            event: {mouseenter: $parent.mouseenter, mouseleave: $parent.mouseleave},
                             css: {money: 1,
                                   pos: value >= 0,
                                   neg: value < 0,
