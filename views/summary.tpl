@@ -2,11 +2,13 @@
 <h1>Summary</h1>
 <table>
     <thead>
-        <th>period</th>
-        <th colspan="2">+</th>
-        <th colspan="2">-</th>
-        <th colspan="2">&sum;</th>
-        <th>saldo</th>
+        <tr>
+            <th>period</th>
+            <th colspan="2">+</th>
+            <th colspan="2">-</th>
+            <th colspan="2">&sum;</th>
+            <th>saldo</th>
+        </tr>
     </thead>
     <tbody data-bind="foreach: {data: summaryList}">
         <tr data-bind="css: {odd: $index()%2,
