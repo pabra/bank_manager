@@ -187,6 +187,7 @@ BankTransactions = function BankTransactionsFn() {
                     + formatMoney(sum) + '</span>');
         });
         self.getTransactions = ko.computed(function() {
+            $('input').blur();
             if (!self.readyForGet()) {
                 return;
             }
@@ -215,7 +216,8 @@ BankTransactions = function BankTransactionsFn() {
                 params.value_compare = self.valueCompare();
             }
             uri = 'api/transactions/'+account+'?'+$.param(params);
-            if (uri === self.lastUri())  {
+            if (uri === self.lastUri()) {
+                self.readyForGet(true);
                 return;
             }
             self.lastUri(uri);
@@ -229,6 +231,7 @@ BankTransactions = function BankTransactionsFn() {
                 });
                 model.transactionList(list);
                 model.sortList(self.sortColumn(), self.sortDirection());
+                model.sumList([]);
                 self.readyForGet(true);
             });
         });
@@ -240,6 +243,7 @@ BankTransactions = function BankTransactionsFn() {
             } else {
                 self.sumList.splice(idx, 1);
             }
+            $(window).trigger('scroll');
         };
 
         self.mouseenter = function mouseenterFn(row) {

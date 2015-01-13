@@ -26,6 +26,15 @@
             <th class="clickable" data-column="transfer_to" data-bind="click: clickSort, css: 'transfer_to'===sortColumn()?sortDirection():''">to</th>
             <th class="clickable" data-column="value" data-bind="click: clickSort, css: 'value'===sortColumn()?sortDirection():''">value</th>
         </tr>
+        <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th><input type="text" class="date" data-bind="visible:dateFrom(), value:dateFrom"/></th>
+            <th><input type="text" class="date" data-bind="visible:dateTo(), value:dateTo"/></th>
+            <th></th>
+        </tr>
     </thead>
     <tbody data-bind="foreach: {data: transactionList}">
         <tr data-bind="event: {mouseenter: $parent.mouseenter, mouseleave: $parent.mouseleave},

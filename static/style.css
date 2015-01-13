@@ -126,3 +126,7 @@ th.desc:after {
     border-top: 1px solid #777;
     border-bottom: 3px double #777;
 }
+
+input[type="text"].date {
+    width: 80px;
+}
