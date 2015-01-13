@@ -49,6 +49,7 @@ tr.month_row.odd td {
 
 tr.highlight td, div.highlight {
     background: #ccc;
+    font-weight: bold;
 }
 
 th.asc:after {
