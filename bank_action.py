@@ -39,7 +39,9 @@ class Session(object):
         self.Config.read(ini_file)
         accounts = self.Config.sections()
         assert accounts, 'There are no accounts configured'
-        assert self.account in accounts, 'There is no section for account %s in config file.' % self.account
+        assert 'config' != self.account, '%r is no valid account name.' % self.account
+        assert 'config' in accounts, 'Missing [config] section in config file.'
+        assert self.account in accounts, 'There is no section for account %r in config file.' % self.account
 
     def conf(self, param):
         return self.Config.get(self.account, param)
@@ -279,7 +281,7 @@ def send_message(msg=[], subject='Debit Warning', mail_from='patrick.braune@gmai
     except:
         print text_to_send
 
-def check_lastschrift():
+def check_lastschrift(sess):
     con, cur = db_connect()
     today = datetime.date.today()
     year_ago = today - datetime.timedelta(365)
@@ -337,9 +339,10 @@ def check_lastschrift():
             cur.execute(q, (x[5], x[1], today))
 
     if msg:
+        msg.append('-- \n%s/debit' % (sess.Config.get('config', 'bank_server') or 'http://127.0.0.1/'))
         send_message(msg)
 
-def db_import_file(file_name, account_no):
+def db_import_file(file_name, account_no, sess):
     con, cur = db_connect()
     csv_list = get_csv_from_file(file_name)
     csv_from = get_parsed_csv_row(csv_list[:1][0])[0]
@@ -388,7 +391,7 @@ def db_import_file(file_name, account_no):
             WHERE number = ?
         '''
         cur.execute(q, (datetime.datetime.now(), account_no))
-        check_lastschrift()
+        check_lastschrift(sess)
 
 def get_accounts():
     con, cur = db_connect()
@@ -450,7 +453,7 @@ def update_db(account):
     files = get_files(account=account, min_date=last_date)
     files.sort()
     for f in files:
-        db_import_file(f, acc_no)
+        db_import_file(f, acc_no, sess)
 
     db_close()
 
