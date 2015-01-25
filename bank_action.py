@@ -339,7 +339,7 @@ def check_lastschrift(sess):
             cur.execute(q, (x[5], x[1], today))
 
     if msg:
-        msg.append('-- \n%s/debit' % (sess.Config.get('config', 'bank_server') or 'http://127.0.0.1/'))
+        msg.append('see \n%s/debit' % (sess.Config.get('config', 'bank_server') or 'http://127.0.0.1/'))
         send_message(msg)
 
 def db_import_file(file_name, account_no, sess):
