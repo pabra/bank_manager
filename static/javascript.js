@@ -418,8 +418,6 @@ $(function(){
             };
 
             self.isClickable = function isClickableFn(period) {
-                //console.log('isClickable');
-                //console.log(period);
                 return period.match(/^\d{4}$/) ? true : false;
             };
 
