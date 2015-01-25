@@ -79,6 +79,10 @@ th.desc:after {
     font-weight: bold;
 }
 
+.center {
+    text-align: center;
+}
+
 .clickable {
     cursor: url(cursor_sqlite.png), pointer;
     -moz-user-select: none;

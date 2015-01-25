@@ -247,6 +247,7 @@ $(function(){
                         x.valuta_loc = dateToStr(strToDate(x.valuta), '%d.%m.%Y');
                         x.value_loc = formatMoney(x.value);
                         x.hover = ko.observable(false);
+                        x.inSumList = ko.observable(false);
                     });
                     model.transactionList(list);
                     model.sortList(self.sortColumn(), self.sortDirection());
@@ -255,12 +256,17 @@ $(function(){
                 });
             });
 
-            self.clickForSum = function clickForSumFn(transaction) {
+            self.clickForSum = function clickForSumFn(transaction, ev) {
                 var idx = self.sumList.indexOf(transaction);
                 if (-1 === idx) {
                     self.sumList.push(transaction);
+                    transaction.inSumList(true);
                 } else {
+                    if ($(ev.target).hasClass('sum_entry')) {
+                        transaction.hover(false);
+                    }
                     self.sumList.splice(idx, 1);
+                    transaction.inSumList(false);
                 }
                 $(window).trigger('scroll');
             };
@@ -298,6 +304,17 @@ $(function(){
 
                 mod.sortList(col, dir);
             };
+
+            self.allSelected = ko.pureComputed({
+                write: function (value) {
+                    self.sumList(value ? self.transactionList.slice(0) : []);
+                    $(window).trigger('scroll');
+                },
+                read: function () {
+                    return self.sumList().length === self.transactionList().length;
+                },
+                owner: this
+            });
         };
 
         init = function initFn() {

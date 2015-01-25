@@ -2,10 +2,11 @@
 <h1>Transactions</h1>
 <div id="sum_box" data-bind="visible: sumList().length">
     <div data-bind="foreach: {data: sumList}">
-            <div data-bind="text: value_loc,
+            <div class="money sum_entry"
+                 data-bind="text: value_loc,
                             event: {mouseenter: $parent.mouseenter, mouseleave: $parent.mouseleave},
-                            css: {money: 1,
-                                  pos: value >= 0,
+                            click: $parent.clickForSum,
+                            css: {pos: value >= 0,
                                   neg: value < 0,
                                   highlight: hover}"></div>
     </div>
@@ -25,6 +26,7 @@
             <th class="clickable" data-column="transfer_from" data-bind="click: clickSort, css: 'transfer_from'===sortColumn()?sortDirection():''">from</th>
             <th class="clickable" data-column="transfer_to" data-bind="click: clickSort, css: 'transfer_to'===sortColumn()?sortDirection():''">to</th>
             <th class="clickable" data-column="value" data-bind="click: clickSort, css: 'value'===sortColumn()?sortDirection():''">value</th>
+            <th><input type="checkbox" data-bind="checked: allSelected"/></th>
         </tr>
         <tr>
             <th></th>
@@ -33,6 +35,7 @@
             <th></th>
             <th><input type="text" class="date" data-bind="visible:dateFrom(), value:dateFrom"/></th>
             <th><input type="text" class="date" data-bind="visible:dateTo(), value:dateTo"/></th>
+            <th></th>
             <th></th>
         </tr>
     </thead>
@@ -53,6 +56,10 @@
                                  neg: value < 0,
                                  clickable: 1},
                            click: $parent.clickForSum"></td>
+            <td class="center clickable" data-bind="click: $parent.clickForSum">
+                <input type="checkbox" disabled="disabled"
+                       data-bind="checkedValue: $data, checked: $parent.sumList"/>
+            </td>
         </tr>
     </tbody>
 </table>
