@@ -42,7 +42,7 @@
     <tbody data-bind="foreach: {data: transactionList}">
         <tr data-bind="event: {mouseenter: $parent.mouseenter, mouseleave: $parent.mouseleave},
                        css: {odd: $index() % 2,
-                             even: !$index() % 2,
+                             even: !($index() % 2),
                              highlight: hover}">
             <td class="mono" data-bind="text: date_loc"></td>
             <td class="mono" data-bind="text: valuta_loc"></td>
