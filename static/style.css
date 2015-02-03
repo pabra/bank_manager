@@ -45,6 +45,14 @@ tr.odd td {
     background-color: #ddd;
 }
 
+tr.even.highlight td {
+    background-color: #dde !important;
+}
+
+tr.odd.highlight td {
+    background-color: #ccd !important;
+}
+
 tr.month_row.even td {
     background-color: #ffe;
 }
@@ -55,7 +63,7 @@ tr.month_row.odd td {
 
 tr.highlight td, div.highlight {
     background: #ccc;
-    font-weight: bold;
+    text-shadow: 0 0 1px rgba(0,0,0,0.6);
 }
 
 th.asc:after {
