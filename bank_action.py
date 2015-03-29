@@ -447,10 +447,13 @@ def fetch(account):
     link2 = filter(lambda l: l.text == 'Zu den Kontoauszügen', br.links())[0]
     br.follow_link(link)
 
+    csv_cnt = br.response().read()
+    csv_cnt = csv_cnt.decode('1252')
+    csv_cnt = csv_cnt.encode('utf-8')
     save('data/%s/trans/%s_%s.csv' % (today.year,
                                       account,
                                       today.strftime(date_save_format)),
-         br.response().read())
+         csv_cnt)
 
     br.open(link2.absolute_url)
 
