@@ -31,7 +31,9 @@
         <tr>
             <th><input type="date" class="date" title="date from" data-bind="value:dateFrom"/></th>
             <th><input type="date" class="date" title="date to" data-bind="value:dateTo"/></th>
-            <th></th>
+            <th>
+                <select data-bind="options: transactionTypes"></select>
+            </th>
             <th></th>
             <th></th>
             <th></th>

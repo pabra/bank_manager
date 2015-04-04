@@ -255,6 +255,16 @@ $(function(){
                     self.readyForGet(true);
                 });
             });
+            self.transactionTypes = ko.pureComputed(function() {
+                var l = [];
+                ko.utils.arrayForEach(self.transactionList(), function(x) {
+                    if (-1 === l.indexOf(x.type)) {
+                        l.push(x.type);
+                    }
+                });
+                l.sort();
+                return l;
+            });
 
             self.clickForSum = function clickForSumFn(transaction, ev) {
                 var idx = self.sumList.indexOf(transaction);
