@@ -29,12 +29,12 @@
             <th><input type="checkbox" data-bind="checked: allSelected"/></th>
         </tr>
         <tr>
+            <th><input type="date" class="date" title="date from" data-bind="value:dateFrom"/></th>
+            <th><input type="date" class="date" title="date to" data-bind="value:dateTo"/></th>
             <th></th>
             <th></th>
             <th></th>
             <th></th>
-            <th><input type="text" class="date" data-bind="visible:dateFrom(), value:dateFrom"/></th>
-            <th><input type="text" class="date" data-bind="visible:dateTo(), value:dateTo"/></th>
             <th></th>
             <th></th>
         </tr>
