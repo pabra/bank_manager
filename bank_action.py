@@ -421,6 +421,13 @@ def fetch(account):
 
     save('log/login.html', br.response().read())
     #content = read('log/login.html')
+    if 0 == len(list(br.forms())):
+        headings = re.findall(r'<h1[^>]*>([\s\S]*?)</\s*h1>',
+                              br.response().read())
+        print 'no login form'
+        print '\n'.join(headings)
+        br.close()
+        sys.exit(0)
     br.form = filter(lambda f: f.attrs.get('class') == 'form-cn', br.forms())[0]
     br['nutzername'] = config.conf('user')
     br['kennwort'] = config.conf('pass')
