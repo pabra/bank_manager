@@ -44,14 +44,13 @@ class Config(object):
 def get_cwd():
     return os.path.dirname(os.path.realpath(__file__))
 
-def save(file_name, content, binary=False):
+def save(file_name, content):
     cwd = get_cwd()
     subdir = os.path.join(cwd, os.path.dirname(file_name))
     if not os.path.isdir(subdir):
         os.makedirs(subdir)
     file_path = os.path.join(cwd, file_name)
-    mode = 'w' if not binary else 'wb'
-    f = open(file_path, mode)
+    f = open(file_path, 'w')
     f.write(content)
     f.close()
 
@@ -468,22 +467,26 @@ def fetch(account):
     #content = read('log/statements_overview.html')
 
     logout_link = filter(lambda l: l.text == 'Banking beenden', br.links())[0]
+    pdf_links = []
+    for link in br.links():
+        attrs = {a[0]: a[1] for a in link.attrs}
+        if (attrs.get('title') == 'Kontoauszug als PDF öffnen'
+                and attrs.get('onclick')):
 
-    # ToDo: download PDF files
-    #pdf_links = []
-    #for row in soup.find_all('tr', class_='state-unmarked'):
-    #    pdf_date = datetime.datetime.strptime(row.find('td', class_='headers-date').get_text(strip=True), date_format).date()
-    #    pdf_link = row.find('a', 'action-icon-download').get('href')
-    #    pdf_links.append((pdf_date, pdf_link))
+            pdf_links.append(link)
 
-    #if pdf_links:
-    #    for x in pdf_links:
-    #        pdf_content = config.get(x[1], track_last_url=False, binary=True)
-    #        save('data/%s/pdf/%s_%s.pdf' % (x[0].year,
-    #                                        account,
-    #                                        x[0].strftime(date_save_format)),
-    #             pdf_content,
-    #             binary=True)
+    for l in pdf_links:
+        br.follow_link(l)
+        pdf_disp = br.response().info().getheader('content-disposition')
+        pdf_date_match = re.search(r'[0-9_]+?(\d{2}-\d{2}-\d{4})[0-9_]+\.pdf', pdf_disp)
+        if pdf_date_match:
+            pdf_date = datetime.datetime.strptime(pdf_date_match.group(1), '%d-%m-%Y')
+            save('data/%s/pdf/%s_%s.pdf' % (pdf_date.year,
+                                            account,
+                                            pdf_date.strftime(date_save_format)),
+                 br.response().read())
+        else:
+            print 'not saving PDF - no matching date in content-disposition\n', pdf_disp, '\nof link\n', l
 
     br.open(logout_link.absolute_url)
     save('log/logged_out.html', br.response().read())
