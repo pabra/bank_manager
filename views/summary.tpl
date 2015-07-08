@@ -24,7 +24,7 @@
                                  neg: plus_sum < 0},
                            click: $parent.gotoTransactions"></td>
             <td class="money more_pedding_left less_padding_right" data-bind="text: minus_count"></td>
-            <td class="money values_plus clickable less_padding_left"
+            <td class="money values_minus clickable less_padding_left"
                 data-bind="text: minus_loc,
                            css: {pos: minus_sum >= 0,
                                  neg: minus_sum < 0},
