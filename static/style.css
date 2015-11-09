@@ -67,7 +67,7 @@ tr.highlight td, div.highlight {
 }
 
 th.asc:after {
-    content: " \025B4";
+    content: " \021D1";
 }
 
 tr.year_row td {
@@ -76,7 +76,7 @@ tr.year_row td {
 }
 
 th.desc:after {
-    content: " \025BE";
+    content: " \021D3";
 }
 
 #header a.active {
