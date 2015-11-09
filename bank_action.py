@@ -428,8 +428,8 @@ def fetch(account):
         br.close()
         sys.exit(0)
     br.form = filter(lambda f: f.attrs.get('class') == 'form-cn', br.forms())[0]
-    br['nutzername'] = config.conf('user')
-    br['kennwort'] = config.conf('pass')
+    br['nutzernameStateEnclosure:nutzername'] = config.conf('user')
+    br['kennwortStateEnclosure:kennwort'] = config.conf('pass')
     br.submit()
 
     save('log/logged_in.html', br.response().read())
